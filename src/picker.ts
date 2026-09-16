@@ -1,6 +1,7 @@
 /** 素材选择器：搜索 + 复选多选知识点笔记；也可一键改用当前打开的笔记 */
 import { App, ButtonComponent, Modal, Setting } from 'obsidian';
 import type { KpNote } from './types';
+import { t } from './i18n';
 
 export class KpPickerModal extends Modal {
 	private query = '';
@@ -16,7 +17,7 @@ export class KpPickerModal extends Modal {
 		super(app);
 		this.all = notes;
 		this.current = current;
-		this.setTitle('Mimic · 选择加工素材');
+		this.setTitle(t('picker.title'));
 	}
 
 	/** 返回 Promise，resolve 选中的知识点（取消/关闭返回 []） */
@@ -39,19 +40,19 @@ export class KpPickerModal extends Modal {
 		const { contentEl } = this;
 		if (this.current) {
 			new Setting(contentEl)
-				.setName('当前笔记')
-				.setDesc('不想从目录里挑？直接拿正在编辑的这篇当素材（不受知识点目录限制）')
+				.setName(t('picker.current.name'))
+				.setDesc(t('picker.current.desc'))
 				.addButton(b => b
-					.setButtonText(`用「${this.current!.title}」作素材`)
+					.setButtonText(t('picker.current.button', { title: this.current!.title }))
 					.onClick(() => {
 						this.resolveOnce([this.current!]);
 						this.close();
 					}));
 		}
 		new Setting(contentEl)
-			.setName('从知识点目录勾选')
-			.addText(t => t
-				.setPlaceholder('搜索：标题 / 章节 / 编号')
+			.setName(t('picker.folder.name'))
+			.addText(t2 => t2
+				.setPlaceholder(t('picker.search.placeholder'))
 				.onChange(v => { this.query = v.trim(); this.renderList(); }));
 		this.listEl = contentEl.createDiv({ cls: 'fn-picker-list' });
 		new Setting(contentEl)
@@ -70,8 +71,8 @@ export class KpPickerModal extends Modal {
 
 	private updateOkBtn() {
 		this.okBtn?.setButtonText(this.selected.size
-			? `下一步：设置参数（已选 ${this.selected.size}）`
-			: '下一步：设置参数');
+			? t('picker.next.count', { count: this.selected.size })
+			: t('picker.next.empty'));
 	}
 
 	private renderList() {
@@ -93,7 +94,7 @@ export class KpPickerModal extends Modal {
 				this.updateOkBtn();
 			});
 			row.createSpan({ text: `${n.kpId} · ${n.title}` });
-			row.createSpan({ cls: 'fn-picker-meta', text: `第${n.chapter}章 ${n.chapterTitle}` });
+			row.createSpan({ cls: 'fn-picker-meta', text: n.chapter ? t('picker.row.meta', { chapter: n.chapter, chapterTitle: n.chapterTitle }) : '' });
 			row.addEventListener('click', (e) => {
 				if (e.target === cb) return;
 				cb.checked = !cb.checked;
@@ -102,7 +103,7 @@ export class KpPickerModal extends Modal {
 			row.toggleClass('is-selected', cb.checked);
 		}
 		if (!hits.length) {
-			this.listEl.createDiv({ cls: 'fn-picker-empty', text: '（无匹配知识点；确认知识点目录设置正确且已迁移）' });
+			this.listEl.createDiv({ cls: 'fn-picker-empty', text: t('picker.empty') });
 		}
 	}
 }

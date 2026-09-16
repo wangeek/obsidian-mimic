@@ -4,26 +4,28 @@ import { DEFAULT_SETTINGS, SEED_RECIPES, type KpNote, type MimicSettings } from 
 import { KpPickerModal } from './picker';
 import { ComposeWizard } from './wizard';
 import { MimicSettingTab } from './settings';
+import { initLocale, t } from './i18n';
 
 export default class MimicPlugin extends Plugin {
 	settings: MimicSettings = DEFAULT_SETTINGS;
 
 	async onload() {
 		await this.loadSettings();
+		initLocale();
 
-		this.addRibbonIcon('quote-glyph', 'Mimic 拟态加工', () => { void this.startCompose(); });
+		this.addRibbonIcon('quote-glyph', t('main.ribbon.tooltip'), () => { void this.startCompose(); });
 		this.addCommand({
 			id: 'compose',
-			name: '拟态加工：知识点 → 拟态笔记',
+			name: t('main.command.compose'),
 			callback: () => { void this.startCompose(); },
 		});
 		this.addCommand({
 			id: 'compose-current',
-			name: '拟态加工：加工当前笔记',
+			name: t('main.command.composeCurrent'),
 			callback: () => {
 				const kp = this.buildKpFromFile(this.app.workspace.getActiveFile());
 				if (!kp) {
-					new Notice('当前没有打开的笔记——先在编辑区打开一篇再运行此命令');
+					new Notice(t('main.notice.noActiveNote'));
 					return;
 				}
 				void this.startCompose([kp]);
@@ -31,7 +33,7 @@ export default class MimicPlugin extends Plugin {
 		});
 		this.addCommand({
 			id: 'import-seed-recipes',
-			name: '导入示范配方（追加，不覆盖已有）',
+			name: t('main.command.importSeeds'),
 			callback: () => { void this.importSeedRecipes(); },
 		});
 		this.addSettingTab(new MimicSettingTab(this.app, this));
@@ -40,14 +42,14 @@ export default class MimicPlugin extends Plugin {
 	/** 入口：preset 传入了素材（如"加工当前笔记"）则跳过选择器，否则从目录勾选 */
 	private async startCompose(preset?: KpNote[]) {
 		if (!this.settings.recipes.length) {
-			new Notice('还没有配方——请在设置中新建，或运行「导入示范配方」');
+			new Notice(t('main.notice.noRecipes'));
 			return;
 		}
 		let kps = preset;
 		if (!kps?.length) {
 			const notes = this.indexKnowledge();
 			if (!notes.length) {
-				new Notice(`「${this.settings.knowledgeDir}/」下没有知识点笔记——请先运行 migrate 工具或检查设置里的目录`);
+				new Notice(t('main.notice.noKnowledge', { dir: this.settings.knowledgeDir }));
 				return;
 			}
 			const current = this.buildKpFromFile(this.app.workspace.getActiveFile());
@@ -123,12 +125,12 @@ export default class MimicPlugin extends Plugin {
 		const have = new Set(this.settings.recipes.map(r => r.id));
 		const adding = SEED_RECIPES.filter(r => !have.has(r.id));
 		if (!adding.length) {
-			new Notice('示范配方已存在，未重复导入');
+			new Notice(t('main.notice.seedsExist'));
 			return;
 		}
 		this.settings.recipes.push(...JSON.parse(JSON.stringify(adding)));
 		await this.saveSettings();
-		new Notice(`已导入 ${adding.length} 个示范配方（设置中可自由改造）`);
+		new Notice(t('main.notice.seedsImported', { count: adding.length }));
 	}
 
 	async loadSettings() {

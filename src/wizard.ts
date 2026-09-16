@@ -5,6 +5,7 @@ import type { ComposeResult, KpNote } from './types';
 import { buildGeneratePrompt, renderSlot } from './prompt';
 import { chat, parseJsonLoose } from './llm';
 import { writeComposedNote } from './render';
+import { t } from './i18n';
 
 export class ComposeWizard extends Modal {
 	private plugin: MimicPlugin;
@@ -20,7 +21,7 @@ export class ComposeWizard extends Modal {
 		super(app);
 		this.plugin = plugin;
 		this.kps = kps;
-		this.setTitle('Mimic · 拟态加工');
+		this.setTitle(t('wizard.title'));
 		this.modalEl.addClass('fn-wizard');
 	}
 
@@ -46,12 +47,12 @@ export class ComposeWizard extends Modal {
 		contentEl.empty();
 		const names = this.kps.map(k => k.title);
 		const label = names.length > 6
-			? names.slice(0, 6).join('、') + ` 等 ${names.length} 篇`
-			: names.join('、');
-		contentEl.createEl('p', { cls: 'fn-muted', text: `素材：${label}` });
+			? t('wizard.material.more', { list: names.slice(0, 6).join('、'), count: names.length })
+			: t('wizard.material.plain', { list: names.join('、') });
+		contentEl.createEl('p', { cls: 'fn-muted', text: label });
 
 		const recipes = this.plugin.settings.recipes;
-		new Setting(contentEl).setName('配方').addDropdown(dd => {
+		new Setting(contentEl).setName(t('wizard.recipe')).addDropdown(dd => {
 			recipes.forEach((r, i) => dd.addOption(String(i), r.name));
 			dd.setValue(String(this.recipeIdx)).onChange(v => {
 				this.recipeIdx = parseInt(v, 10);
@@ -62,7 +63,7 @@ export class ComposeWizard extends Modal {
 
 		const r = recipes[this.recipeIdx];
 		if (r?.worldview) {
-			contentEl.createEl('p', { cls: 'fn-stance-info', text: `舞台：${r.worldview}` });
+			contentEl.createEl('p', { cls: 'fn-stance-info', text: t('wizard.stage', { worldview: r.worldview }) });
 		}
 
 		// 槽位渲染（配方驱动；select/number/text 三种控件）
@@ -74,22 +75,22 @@ export class ComposeWizard extends Modal {
 					dd.setValue(this.slotValues[s.id] ?? '').onChange(v => { this.slotValues[s.id] = v; });
 				});
 			} else if (s.type === 'number') {
-				set.addText(t => {
-					t.inputEl.type = 'number';
-					if (s.min != null) t.inputEl.min = String(s.min);
-					if (s.max != null) t.inputEl.max = String(s.max);
-					t.setValue(this.slotValues[s.id] ?? '')
+				set.addText(tx => {
+					tx.inputEl.type = 'number';
+					if (s.min != null) tx.inputEl.min = String(s.min);
+					if (s.max != null) tx.inputEl.max = String(s.max);
+					tx.setValue(this.slotValues[s.id] ?? '')
 						.onChange(v => { this.slotValues[s.id] = v; });
 				});
 			} else {
-				set.addTextArea(t => t
+				set.addTextArea(tx => tx
 					.setValue(this.slotValues[s.id] ?? '')
 					.onChange(v => { this.slotValues[s.id] = v; }));
 			}
 		}
 
 		new Setting(contentEl).addButton(b => b
-			.setButtonText('生成')
+			.setButtonText(t('wizard.generate'))
 			.setCta()
 			.onClick(() => { void this.generate(); }));
 	}
@@ -121,7 +122,8 @@ export class ComposeWizard extends Modal {
 		}
 
 		// 素材：正文小节（核心定义/关键要点）优先，开头摘录兜底；
-		// 库外笔记（如"加工当前笔记"）无小节结构，直接用摘录
+		// 库外笔记（如"加工当前笔记"）无小节结构，直接用摘录。
+		// 注意：素材行属 prompt 内容（LLM 指令），固定中文，不随 UI 语言切换
 		const points = await Promise.all(this.kps.map(async k => {
 			const sec = await this.plugin.readKpSections(k.path);
 			const chapterLine = k.chapter
@@ -149,8 +151,8 @@ export class ComposeWizard extends Modal {
 			const linkNotes: Record<string, string> = {};
 			const ln = v.link_notes;
 			if (ln && typeof ln === 'object' && !Array.isArray(ln)) {
-				for (const [t, note] of Object.entries(ln as Record<string, unknown>)) {
-					linkNotes[t.trim()] = String(note ?? '').trim();
+				for (const [tk, note] of Object.entries(ln as Record<string, unknown>)) {
+					linkNotes[tk.trim()] = String(note ?? '').trim();
 				}
 			}
 			const res: ComposeResult = {
@@ -160,14 +162,14 @@ export class ComposeWizard extends Modal {
 				linkNotes,
 			};
 			if (!res.title || !res.coreSegment || !res.narrativeShell) {
-				throw new Error('回复缺少 title / core_segment / narrative_shell');
+				throw new Error(t('wizard.badShape'));
 			}
 			this.result = res;
 			this.renderResult();
 		} catch (e) {
-			this.statusEl.setText(`生成失败：${e instanceof Error ? e.message : String(e)}（可返回参数页重试）`);
+			this.statusEl.setText(t('wizard.failed', { msg: e instanceof Error ? e.message : String(e) }));
 			new Setting(this.contentEl).addButton(b => b
-				.setButtonText('← 返回参数页')
+				.setButtonText(t('wizard.back'))
 				.onClick(() => this.renderParams()));
 		} finally {
 			this.generating = false;
@@ -179,7 +181,7 @@ export class ComposeWizard extends Modal {
 		contentEl.empty();
 		this.statusEl = contentEl.createEl('p', {
 			cls: 'fn-muted',
-			text: `生成中（${this.plugin.settings.model}，约 0.5~1 分钟）…`,
+			text: t('wizard.generating', { model: this.plugin.settings.model }),
 		});
 	}
 
@@ -190,29 +192,29 @@ export class ComposeWizard extends Modal {
 		contentEl.empty();
 		const r = this.result!;
 
-		new Setting(contentEl).setName('标题').addText(t => t.setValue(r.title).onChange(v => { r.title = v; }));
-		contentEl.createEl('p', { text: '核心段（模仿底线：知识密度最高，不再编辑）' });
+		new Setting(contentEl).setName(t('wizard.title.label')).addText(tx => tx.setValue(r.title).onChange(v => { r.title = v; }));
+		contentEl.createEl('p', { text: t('wizard.core.note') });
 		const core = contentEl.createEl('textarea', { cls: 'fn-core' });
 		core.value = r.coreSegment;
 		core.readOnly = true;
-		contentEl.createEl('p', { text: '叙事外壳（扭曲层，可编辑定稿）' });
+		contentEl.createEl('p', { text: t('wizard.shell.note') });
 		const shell = contentEl.createEl('textarea', { cls: 'fn-shell' });
 		shell.value = r.narrativeShell;
 		shell.addEventListener('input', () => { r.narrativeShell = shell.value; });
 
-		contentEl.createEl('p', { text: '关联知识点说明（写进文尾链接；留空则只注章节）' });
+		contentEl.createEl('p', { text: t('wizard.links.note') });
 		for (const k of this.kps) {
-			new Setting(contentEl).setName(k.title).addText(t => t
-				.setPlaceholder('一句话：本文如何使用它')
+			new Setting(contentEl).setName(k.title).addText(tx => tx
+				.setPlaceholder(t('wizard.link.placeholder'))
 				.setValue(r.linkNotes[k.title] ?? '')
 				.onChange(v => { r.linkNotes[k.title] = v; }));
 		}
 
 		this.statusEl = contentEl.createEl('p', { cls: 'fn-muted' });
 		const actions = new Setting(contentEl);
-		actions.addButton(b => b.setButtonText('← 参数').onClick(() => this.renderParams()));
+		actions.addButton(b => b.setButtonText(t('wizard.back')).onClick(() => this.renderParams()));
 		actions.addButton(b => b
-			.setButtonText('写入笔记')
+			.setButtonText(t('wizard.write'))
 			.setCta()
 			.onClick(() => { void this.writeNote(); }));
 	}
@@ -221,14 +223,14 @@ export class ComposeWizard extends Modal {
 		const st = this.plugin.settings;
 		const r = this.result!;
 		const words = (r.coreSegment + r.narrativeShell).replace(/\s/g, '').length;
-		if (words < st.minWords) return `字数不足（${words} < ${st.minWords}）`;
-		if (words > st.maxWords) return `字数超出（${words} > ${st.maxWords}）`;
+		if (words < st.minWords) return t('wizard.validate.under', { words, min: st.minWords });
+		if (words > st.maxWords) return t('wizard.validate.over', { words, max: st.maxWords });
 		return null;
 	}
 
 	private async writeNote() {
 		const err = this.validate();
-		if (err) { new Notice(`校验未通过：${err}`); return; }
+		if (err) { new Notice(t('wizard.notice.validateFailed', { msg: err })); return; }
 		const st = this.plugin.settings;
 		const recipe = st.recipes[this.recipeIdx];
 		try {
@@ -243,10 +245,10 @@ export class ComposeWizard extends Modal {
 				},
 				this.kps,
 			);
-			new Notice(`已写入：${path}`);
+			new Notice(t('wizard.notice.written', { path }));
 			this.close();
 		} catch (e) {
-			new Notice(`写入失败：${e instanceof Error ? e.message : String(e)}`);
+			new Notice(t('wizard.notice.writeFailed', { msg: e instanceof Error ? e.message : String(e) }));
 		}
 	}
 }

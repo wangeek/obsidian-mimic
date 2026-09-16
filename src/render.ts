@@ -1,6 +1,7 @@
 /** 产物落盘：frontmatter（配方与槽位快照 + kp_ids）+ 拟态正文 + 关联知识点链接 */
 import { App, TFile, normalizePath } from 'obsidian';
 import type { ComposeResult, KpNote } from './types';
+import { t } from './i18n';
 
 export interface ComposeMeta {
 	model: string;
@@ -53,7 +54,9 @@ export async function writeComposedNote(
 			const link = `- [[${fileName}|${k.title}]]`;
 			const note = (meta.linkNotes[k.title] ?? '').trim();
 			if (note) return `${link} — ${note}`;
-			return k.chapter ? `${link}（第${k.chapter}章 ${k.chapterTitle}）` : link;
+			return k.chapter
+				? `${link} ${t('render.chapterNote', { chapter: k.chapter, chapterTitle: k.chapterTitle })}`
+				: link;
 		})
 		.join('\n');
 
@@ -66,13 +69,13 @@ export async function writeComposedNote(
 		'',
 		r.narrativeShell,
 		'',
-		'## 关联知识点',
+		t('render.relatedHeading'),
 		'',
 		links,
 		'',
 	].join('\n');
 
-	const base = `${ymd()}-${safeName(r.title) || '未命名'}`;
+	const base = `${ymd()}-${safeName(r.title) || t('render.untitled')}`;
 	let path = `${dir}/${base}.md`;
 	let n = 2;
 	while (app.vault.getAbstractFileByPath(path) instanceof TFile) {

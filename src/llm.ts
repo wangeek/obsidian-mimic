@@ -8,6 +8,7 @@
  */
 import { requestUrl } from 'obsidian';
 import type { MimicSettings } from './types';
+import { t } from './i18n';
 
 export function stripThink(s: string): string {
 	return s.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
@@ -15,12 +16,12 @@ export function stripThink(s: string): string {
 
 /** 从剥完 think 的文本中宽松提取第一个 JSON 对象（容忍代码栅栏与前后杂文） */
 export function parseJsonLoose(s: string): Record<string, unknown> {
-	const t = stripThink(s);
-	const start = t.indexOf('{');
-	if (start < 0) throw new Error('回复中没有 JSON 对象');
+	const t2 = stripThink(s);
+	const start = t2.indexOf('{');
+	if (start < 0) throw new Error(t('llm.noJson'));
 	let depth = 0, inStr = false, esc = false;
-	for (let i = start; i < t.length; i++) {
-		const c = t[i];
+	for (let i = start; i < t2.length; i++) {
+		const c = t2[i];
 		if (esc) { esc = false; continue; }
 		if (c === '\\') { esc = true; continue; }
 		if (c === '"') { inStr = !inStr; continue; }
@@ -29,11 +30,11 @@ export function parseJsonLoose(s: string): Record<string, unknown> {
 		else if (c === '}') {
 			depth--;
 			if (depth === 0) {
-				return JSON.parse(t.slice(start, i + 1));
+				return JSON.parse(t2.slice(start, i + 1));
 			}
 		}
 	}
-	throw new Error('JSON 对象未闭合');
+	throw new Error(t('llm.jsonUnclosed'));
 }
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -68,7 +69,7 @@ export async function chat(
 				throw new Error(`HTTP ${res.status}: ${JSON.stringify(res.json?.error ?? '')}`);
 			}
 			const content = res.json?.choices?.[0]?.message?.content;
-			if (typeof content !== 'string') throw new Error('回复结构异常（无 content）');
+			if (typeof content !== 'string') throw new Error(t('llm.noContent'));
 			return stripThink(content);
 		} catch (e) {
 			lastErr = e instanceof Error ? e.message : String(e);
@@ -76,5 +77,5 @@ export async function chat(
 			if (!/HTTP|fetch|network|timeout/i.test(lastErr)) throw e;
 		}
 	}
-	throw new Error(`LLM 调用失败（已重试）：${lastErr}`);
+	throw new Error(t('llm.failed', { msg: lastErr }));
 }
