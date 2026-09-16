@@ -62,6 +62,8 @@
 - 构建：`npm run build`（esbuild → main.js）；安装 = 拷贝
   main.js/manifest.json/styles.css 到 `<vault>/.obsidian/plugins/mimic/`。
 - 本工程结构与脚本风格沿用作者此前的 obsidian-lottery 模板。
+- **当前验证/使用环境**：vault = `D:\notes\2025`（插件已装并启用，知识库
+  已迁入 `知识点/` 377 篇，API Key 已由用户配置在插件 data.json）。
 
 ## 7. 已知边界
 
