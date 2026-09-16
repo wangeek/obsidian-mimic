@@ -1,0 +1,158 @@
+[
+  {
+    "id": "global_industry",
+    "name": "全球产业博弈",
+    "worldview": "糖果国 vs 齿轮国",
+    "forbidden": [
+      "不映射现实国家",
+      "不编造数据",
+      "不歪曲定义"
+    ],
+    "sub_conflicts": [
+      {
+        "id": "division_red_vs_security",
+        "stance_a": {
+          "name": "全球分工红利",
+          "core_claim": "融入全球分工带来效率、技术外溢与增长，开放是最优解",
+          "keywords": [
+            "分工",
+            "效率",
+            "外溢",
+            "增长"
+          ]
+        },
+        "stance_b": {
+          "name": "本土产业安全",
+          "core_claim": "关键环节受制于人即系统性风险，安全边界优先于效率",
+          "keywords": [
+            "卡脖子",
+            "安全",
+            "韧性",
+            "备份"
+          ]
+        },
+        "base_conflict": 0.8
+      },
+      {
+        "id": "capital_flow_vs_national",
+        "stance_a": {
+          "name": "资本无国界流动",
+          "core_claim": "资本自由流动优化全球配置，管制扭曲价格",
+          "keywords": [
+            "流动",
+            "配置",
+            "开放",
+            "汇率"
+          ]
+        },
+        "stance_b": {
+          "name": "国民利益属地化",
+          "core_claim": "资本收益全球化而风险本地化不可持续，属地责任优先",
+          "keywords": [
+            "属地",
+            "风险",
+            "管制",
+            "就业"
+          ]
+        },
+        "base_conflict": 0.7
+      },
+      {
+        "id": "comparative_vs_autonomy",
+        "stance_a": {
+          "name": "比较优势理论",
+          "core_claim": "各展所长通过贸易互利，自给自足是效率幻觉",
+          "keywords": [
+            "比较优势",
+            "贸易",
+            "互利",
+            "专业化"
+          ]
+        },
+        "stance_b": {
+          "name": "自主可控诉求",
+          "core_claim": "核心技术买不来，非对称依赖在博弈中是致命弱点",
+          "keywords": [
+            "自主可控",
+            "核心技术",
+            "依赖",
+            "替代"
+          ]
+        },
+        "base_conflict": 0.85
+      },
+      {
+        "id": "rule_hegemony_vs_fairness",
+        "stance_a": {
+          "name": "规则霸权",
+          "core_claim": "由主导方制定并维护统一规则，秩序高于公平争议",
+          "keywords": [
+            "规则",
+            "秩序",
+            "标准",
+            "主导"
+          ]
+        },
+        "stance_b": {
+          "name": "多边公平秩序",
+          "core_claim": "规则应由多方共商，单边长臂管辖破坏公平",
+          "keywords": [
+            "多边",
+            "公平",
+            "共商",
+            "管辖"
+          ]
+        },
+        "base_conflict": 0.75
+      },
+      {
+        "id": "consumer_vs_industry",
+        "stance_a": {
+          "name": "消费者短期利益",
+          "core_claim": "开放竞争带来更低价格与更好选择，保护即消费者税",
+          "keywords": [
+            "价格",
+            "选择",
+            "竞争",
+            "福利"
+          ]
+        },
+        "stance_b": {
+          "name": "长期产业存续",
+          "core_claim": "幼苗产业需要保护期，短期代价换长期能力",
+          "keywords": [
+            "保护",
+            "幼稚产业",
+            "能力",
+            "长期"
+          ]
+        },
+        "base_conflict": 0.7
+      },
+      {
+        "id": "globalization_vs_blocs",
+        "stance_a": {
+          "name": "经济全球化一体化",
+          "core_claim": "全球化不可逆，割裂让所有人更穷",
+          "keywords": [
+            "全球化",
+            "一体化",
+            "互嵌",
+            "不可逆"
+          ]
+        },
+        "stance_b": {
+          "name": "区域阵营化割裂",
+          "core_claim": "安全逻辑压倒效率逻辑，阵营化是新常态",
+          "keywords": [
+            "阵营",
+            "脱钩",
+            "区域化",
+            "安全化"
+          ]
+        },
+        "base_conflict": 0.8
+      }
+    ]
+  }
+]

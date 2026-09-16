@@ -1,0 +1,10 @@
+{
+	"id": "fake-news",
+	"name": "Fake News",
+	"version": "0.1.0",
+	"minAppVersion": "1.4.0",
+	"description": "把知识点笔记作为素材，按拟态矛盾参数用 LLM 加工成传播学视角的叙述笔记（正文 + 关联知识点 wiki-link）。Compose knowledge notes into propaganda-style articles via LLM.",
+	"author": "tp906",
+	"authorUrl": "https://github.com/wangeek",
+	"isDesktopOnly": false
+}
