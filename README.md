@@ -13,7 +13,8 @@ Pick knowledge notes, choose a **recipe** (stage + taboos + prompt slots), and a
 - **Mimic-distort framework** — a hard fidelity floor (core definitions must survive verbatim or equivalent) plus a bounded distortion layer (no invented facts, recipe taboos respected)
 - **Recipes are pure data** — stage (worldview), taboos (forbidden list), and prompt slots; edit everything in the settings GUI, no code changes, plugin stays agnostic to content
 - **Three slot types** — select / number / text, each with its own prompt template (`{value}` = user input, `{label}` = display name); compose any structure: stance pairs, personas, tone dials…
-- **Two seed recipes** — "产业博弈" (stance-pair structure demo) and "新闻滤镜" (lightweight freeform demo); re-import anytime via command (append-only)
+- **Three seed recipes** — "产业博弈" (stance-pair structure demo), "西游新传" (Journey-to-the-West stage demo), and "News Desk" (lightweight English demo: news broadcast / talk-show interview / campaign debate); re-import anytime via command (append-only)
+- **Output follows the material's language** — compose from English notes and the article comes out English, from Chinese notes it stays Chinese; the prompt enforces it
 - **Material picker** — fuzzy search (title / chapter / id) with multi-select checkboxes across the whole knowledge base
 - **Two-layer draft** — core segment (knowledge-dense, locked) + narrative shell (editable), plus per-note one-liners for the outgoing wiki-links
 - **Programmatic gatekeeping** — configurable word-count bounds, then human final edit — no LLM judge by design
@@ -83,7 +84,8 @@ Example slot: label 模仿姿态 (select), template `以{value}的口吻复述�
 - **模仿-扭曲框架**：模仿底线（核心定义原样或等价出现）+ 扭曲边界（不编造事实、遵守配方禁则）
 - **配方是纯数据**：舞台（worldview）、禁则（forbidden）、提示词槽位全部在设置页 GUI 增删改，插件代码对内容齐次无约束
 - **三种槽位**：select / number / text，每个槽位自带 prompt 模板（`{value}` 为用户值，`{label}` 为显示名）；"立场A/B"、"教授口吻"、"强度旋钮"……任何结构都由你组装
-- **内置 2 个示范配方**：产业博弈（立场对结构示范）、新闻滤镜（轻量自由示范）；「导入示范配方」命令随时追加（不覆盖）
+- **内置 3 个示范配方**：产业博弈（双立场结构示范）、西游新传（取经路上讲知识）、News Desk（英文轻量示范：新闻播报 / 访谈 / 竞选辩论）；「导入示范配方」命令随时追加（不覆盖）
+- **产物语言跟随素材**：加工英文笔记出英文文章，加工中文笔记保持中文——由提示词硬规则保证
 - **素材选择器**：标题 / 章节 / 编号模糊搜索，复选多选全库知识点
 - **两层定稿**：核心段（知识密度最高，只读锁定）+ 叙事外壳（可编辑），外加逐条知识点的一句话关联说明
 - **程序化守门**：字数上下限可配 + 人工定稿——设计上不引入 LLM 评估

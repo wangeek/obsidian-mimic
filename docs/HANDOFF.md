@@ -43,10 +43,13 @@ i18n：`src/i18n.ts` 仿 lottery 模式——EN 为基准字典 + `TranslationKe
   设置页 GUI CRUD（`src/settings.ts`），存 Obsidian 插件 `data.json`。
 - 槽位三种控件（select/number/text），每个槽位自带 prompt 模板——
   "立场A/B"等一切结构都是用户用槽位组装的，插件代码对内容齐次无约束。
-- 内置 2 个示范配方（`src/types.ts` SEED_RECIPES）：产业博弈（双立场结构）
-  + **西游新传**（取经路上讲知识，形象化示范；替换了早期的"新闻滤镜"）。
-  面向用户的槽位命名走通俗路线（"偏向哪边/发挥程度"），不用"扭曲向量"类术语；
-  设置页指南解释 prompt 注入机制（插件只拼装指令，不懂内容）。
+- 内置 3 个示范配方（`src/types.ts` SEED_RECIPES）：产业博弈（双立场结构）
+  + **西游新传**（取经路上讲知识，形象化示范；替换了早期的"新闻滤镜"）
+  + **News Desk**（英文轻量示范：播报/访谈/辩论）。面向用户的槽位命名走
+  通俗路线（"偏向哪边/发挥程度"），不用"扭曲向量"类术语；设置页指南解释
+  prompt 注入机制（插件只拼装指令，不懂内容）。
+- **产物语言跟随素材**：GENERATE_SYSTEM 硬规则要求输出语言 = 知识素材语言
+  （标题/正文/link_notes 一致），防止因中文 prompt 导致英文素材产出中文。
 - 素材两种入口：知识点目录勾选（`indexKnowledge`）+ **当前笔记**
   （`buildKpFromFile`，无 kp_id 的笔记标 `external`，不进产物 `kp_ids`，
   回链用文件名 wiki-link）。默认字数守门 300~800。

@@ -141,4 +141,28 @@ export const SEED_RECIPES: MimicRecipe[] = [
 			{ id: 'word_count', label: '目标字数', type: 'number', min: 300, max: 800, deflt: '600' },
 		],
 	},
+	{
+		id: 'news_desk',
+		name: 'News Desk (demo: light & free, English)',
+		worldview: '',
+		forbidden: ['Never invent facts or data not present in the knowledge material'],
+		slots: [
+			{
+				id: 'format', label: 'Format', type: 'select',
+				prompt: 'Present the knowledge as a {value}',
+				values: ['news broadcast', 'talk-show interview', 'campaign debate'],
+				deflt: 'news broadcast',
+			},
+			{
+				id: 'angle', label: 'Angle', type: 'text',
+				prompt: 'Headline angle: {value}',
+				deflt: 'highlight the tension, stay truthful',
+			},
+			{
+				id: 'play_degree', label: 'Playfulness', type: 'number',
+				prompt: 'Dramatic flair (0 = sober reporting, 1 = showtime): {value}',
+				min: 0, max: 1, deflt: '0.4',
+			},
+		],
+	},
 ];
