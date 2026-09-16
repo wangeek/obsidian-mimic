@@ -1,7 +1,15 @@
 /* Mimic 向导与选择器样式 */
 
 .fn-wizard .modal-content {
-	width: 640px;
+	width: 760px;
+	max-width: 92vw;
+}
+
+/* 配方编辑表单的紧凑两列（相邻短字段同行） */
+.fn-two-col {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0 16px;
 }
 
 .fn-picker-list {

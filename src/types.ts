@@ -38,6 +38,8 @@ export interface KpNote {
 	section: string;
 	path: string;
 	definition: string;
+	/** true = 库外笔记（如"加工当前笔记"入口）：无 kp_id，不进产物 kp_ids，仅作素材与回链 */
+	external?: boolean;
 }
 
 /** 生成结果（LLM 返回的三件套 + 关联说明） */
@@ -67,8 +69,8 @@ export const DEFAULT_SETTINGS: MimicSettings = {
 	model: 'MiniMax-M3',
 	knowledgeDir: '知识点',
 	outputDir: '拟态',
-	minWords: 500,
-	maxWords: 3000,
+	minWords: 300,
+	maxWords: 800,
 	recipes: [],
 };
 
@@ -76,7 +78,7 @@ export const DEFAULT_SETTINGS: MimicSettings = {
 export const SEED_RECIPES: MimicRecipe[] = [
 	{
 		id: 'industry_trade',
-		name: '产业博弈（示范：立场对结构）',
+		name: '产业博弈（示范：双立场结构）',
 		worldview: '糖果国 vs 齿轮国',
 		forbidden: ['不映射现实国家', '不编造数据', '不歪曲定义'],
 		slots: [
@@ -97,41 +99,46 @@ export const SEED_RECIPES: MimicRecipe[] = [
 				deflt: '区域产业保护——关键环节自主可控优先',
 			},
 			{
-				id: 'distort_vector', label: '扭曲向量', type: 'select',
-				prompt: '立场倾斜：{value}',
+				id: 'distort_vector', label: '偏向哪边', type: 'select',
+				prompt: '文章总体偏向：{value}',
 				values: ['两面平衡', '偏向立场A', '偏向立场B'],
 				deflt: '两面平衡',
 			},
 			{
-				id: 'distort_degree', label: '扭曲强度', type: 'number',
-				prompt: '夸张与情绪化强度（0~1）：{value}',
+				id: 'distort_degree', label: '发挥程度', type: 'number',
+				prompt: '戏说发挥程度（0=严肃严谨，1=评书演义）：{value}',
 				min: 0, max: 1, deflt: '0.5',
 			},
-			{ id: 'word_count', label: '目标字数', type: 'number', min: 500, max: 3000, deflt: '1200' },
+			{ id: 'word_count', label: '目标字数', type: 'number', min: 300, max: 800, deflt: '600' },
 		],
 	},
 	{
-		id: 'news_filter',
-		name: '新闻滤镜（示范：轻量自由）',
-		worldview: '',
-		forbidden: ['不得编造知识点中不存在的事实与数据'],
+		id: 'journey_west',
+		name: '西游新传（示范：取经路上讲知识）',
+		worldview: '西游取经世界——唐僧师徒一行走在十万八千里的取经路上',
+		forbidden: [
+			'不映射现实人物与国家',
+			'不编造知识点中不存在的事实与数据',
+			'核心定义必须讲对：玩笑归玩笑，知识归知识',
+		],
 		slots: [
 			{
-				id: 'mimic_style', label: '模仿姿态', type: 'select',
-				prompt: '以{value}的方式转述知识',
-				values: ['晚间新闻', '快讯', '深度报道'],
-				deflt: '晚间新闻',
+				id: 'narrator', label: '谁来讲解', type: 'select',
+				prompt: '由{value}向徒弟们讲解本次的知识点，口吻符合其性格',
+				values: ['孙悟空', '唐僧', '猪八戒', '观音菩萨', '太白金星'],
+				deflt: '孙悟空',
 			},
 			{
-				id: 'headline_bias', label: '标题倾向', type: 'text',
-				prompt: '标题的取舍倾向：{value}',
-				deflt: '突出反差与冲突感，但不失实',
+				id: 'demon', label: '难点变妖怪', type: 'text',
+				prompt: '把本知识最难懂的部分设定成一个妖怪（或一场劫难），名叫"{value}"；师徒必须靠正确理解知识点才能降服它',
+				deflt: '概念迷雾妖',
 			},
 			{
-				id: 'distort_degree', label: '扭曲强度', type: 'number',
-				prompt: '渲染强度（0~1）：{value}',
-				min: 0, max: 1, deflt: '0.4',
+				id: 'play_degree', label: '发挥程度', type: 'number',
+				prompt: '戏说发挥程度（0=基本照书正经讲，1=天马行空放开编，但核心定义始终不许讲错）：{value}',
+				min: 0, max: 1, deflt: '0.5',
 			},
+			{ id: 'word_count', label: '目标字数', type: 'number', min: 300, max: 800, deflt: '600' },
 		],
 	},
 ];

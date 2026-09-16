@@ -18,6 +18,18 @@ export default class MimicPlugin extends Plugin {
 			callback: () => { void this.startCompose(); },
 		});
 		this.addCommand({
+			id: 'compose-current',
+			name: '拟态加工：加工当前笔记',
+			callback: () => {
+				const kp = this.buildKpFromFile(this.app.workspace.getActiveFile());
+				if (!kp) {
+					new Notice('当前没有打开的笔记——先在编辑区打开一篇再运行此命令');
+					return;
+				}
+				void this.startCompose([kp]);
+			},
+		});
+		this.addCommand({
 			id: 'import-seed-recipes',
 			name: '导入示范配方（追加，不覆盖已有）',
 			callback: () => { void this.importSeedRecipes(); },
@@ -25,19 +37,42 @@ export default class MimicPlugin extends Plugin {
 		this.addSettingTab(new MimicSettingTab(this.app, this));
 	}
 
-	private async startCompose() {
-		const notes = this.indexKnowledge();
-		if (!notes.length) {
-			new Notice(`「${this.settings.knowledgeDir}/」下没有知识点笔记——请先运行 migrate 工具或检查设置里的目录`);
-			return;
-		}
+	/** 入口：preset 传入了素材（如"加工当前笔记"）则跳过选择器，否则从目录勾选 */
+	private async startCompose(preset?: KpNote[]) {
 		if (!this.settings.recipes.length) {
 			new Notice('还没有配方——请在设置中新建，或运行「导入示范配方」');
 			return;
 		}
-		const picked = await new KpPickerModal(this.app, notes).openAndWait();
-		if (!picked.length) return;
-		new ComposeWizard(this.app, this, picked).open();
+		let kps = preset;
+		if (!kps?.length) {
+			const notes = this.indexKnowledge();
+			if (!notes.length) {
+				new Notice(`「${this.settings.knowledgeDir}/」下没有知识点笔记——请先运行 migrate 工具或检查设置里的目录`);
+				return;
+			}
+			const current = this.buildKpFromFile(this.app.workspace.getActiveFile());
+			kps = await new KpPickerModal(this.app, notes, current).openAndWait();
+			if (!kps.length) return;
+		}
+		new ComposeWizard(this.app, this, kps).open();
+	}
+
+	/** 任意打开的笔记 → 素材项：带 kp_id 的按知识点处理，否则作为库外笔记（external） */
+	buildKpFromFile(f: TFile | null): KpNote | null {
+		if (!f || f.extension !== 'md') return null;
+		const fm = this.app.metadataCache.getFileCache(f)?.frontmatter;
+		const kpId = parseInt(String(fm?.kp_id ?? ''), 10);
+		const known = Number.isFinite(kpId);
+		return {
+			kpId: known ? kpId : 0,
+			title: String(fm?.title ?? f.basename),
+			chapter: known ? String(fm?.chapter ?? '') : '',
+			chapterTitle: known ? String(fm?.chapter_title ?? '') : '',
+			section: known ? String(fm?.section ?? '') : '',
+			path: f.path,
+			definition: String(fm?.core_definition ?? ''),
+			external: !known,
+		};
 	}
 
 	/** 扫描知识点目录的 frontmatter 建索引 */

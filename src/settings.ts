@@ -86,21 +86,26 @@ export class MimicSettingTab extends PluginSettingTab {
 
 	private renderGuide() {
 		const el = this.containerEl.createEl('details');
-		el.createEl('summary', { text: '如何配置一个配方（示例）' });
+		el.createEl('summary', { text: '配方怎么用（大白话 + 工作原理）' });
 		const body = el.createDiv();
 		body.innerHTML = `
-<p><b>配方 = 舞台 + 禁则 + 槽位。</b>每个槽位是向导里的一个输入控件，并自带一段
-prompt 模板（<code>{value}</code> 为用户填的值）。生成时各槽位片段按顺序拼进
-【模仿-扭曲参数】区。</p>
-<p>示例——"课堂讲授的保守教授"配方：</p>
+<p><b>配方就是一张"写作任务单"：</b>告诉 AI <b>在哪个世界讲故事（舞台）、什么不许干（禁则）、
+按哪几句话来写（槽位）</b>。</p>
+<p><b>工作原理（prompt 注入，一句话版）：</b>点"生成"时，插件把你的配置拼成一段指令发给大模型——</p>
 <ul>
-  <li>舞台：<code>无（留空即按现实语境写作）</code></li>
-  <li>槽位1：模仿姿态（select）——模板 <code>以{value}的口吻复述知识</code>，可选：老教授 / 科普作家 / 播客主播</li>
-  <li>槽位2：扭曲向量（text）——模板 <code>叙述倾向：{value}</code>，默认："着重强调考点，弱化争议"</li>
-  <li>槽位3：扭曲强度（number 0~1）——模板 <code>口语化与戏剧化程度：{value}</code></li>
+  <li>【世界观】← 舞台（故事发生在哪儿）</li>
+  <li>【模仿-扭曲参数】← 每个槽位一行：槽位的句子模板 + 你填的值</li>
+  <li>【知识素材】← 你勾选的笔记原文</li>
+  <li>【禁则】← 红线清单</li>
 </ul>
-<p>旧的"立场A/立场B"结构只是槽位的一种组装方式（见示范配方"产业博弈"）：
-两个 text 槽位 + 一个倾斜方向 select。任何结构都由你自己组合，插件不加约束。</p>`;
+<p>模型只看这段拼出来的字。所以：<b>插件本身不懂内容，只负责拼装</b>——槽位随便加、随便改，
+写得越具体，文章走向越可控；一切结构都由你组合。</p>
+<p><b>看内置的"西游新传"配方就懂了：</b>舞台是取经路；"谁来讲解"选孙悟空，AI 就用猴哥的口气讲；
+"难点变妖怪"填"概念迷雾妖"，最难懂的知识点就变成一场要降的妖；"发挥程度"从 0（照书正经讲）
+拉到 1（天马行空），但禁则保证核心定义永远讲对——<b>这就是"模仿"（知识不许错）×"扭曲"
+（说法放开变）</b>。</p>
+<p>想自己搭：新建配方 → 加槽位。比如槽位"模仿姿态"（单选），句子填
+<code>以{value}的口吻复述知识</code>，选项写 老教授 / 科普主播 / 相声演员，就能一键换讲法。</p>`;
 	}
 }
 
@@ -133,15 +138,17 @@ class RecipeEditModal extends Modal {
 		const r = this.r;
 
 		new Setting(contentEl).setName('名称').addText(t => t.setValue(r.name).onChange(v => { r.name = v; }));
-		new Setting(contentEl).setName('id').addText(t => t.setValue(r.id).onChange(v => { r.id = v.trim(); }));
-		new Setting(contentEl).setName('舞台 / 世界观（可空）')
-			.setDesc('虚构舞台（如"糖果国 vs 齿轮国"）；留空则按现实语境写作')
+		new Setting(contentEl).setName('id（配方的英文代号，进产物记录）').addText(t => t.setValue(r.id).onChange(v => { r.id = v.trim(); }));
+		new Setting(contentEl).setName('舞台：故事发生在哪个世界？（可空）')
+			.setDesc('例："西游取经世界"。留空 = 按现实语境正经写')
 			.addTextArea(t => t.setValue(r.worldview).onChange(v => { r.worldview = v; }));
-		new Setting(contentEl).setName('禁则（分号分隔）').addText(t => t.setValue(r.forbidden.join('；')).onChange(v => {
-			r.forbidden = v.split(/[；;]/).map(x => x.trim()).filter(Boolean);
-		}));
+		new Setting(contentEl).setName('禁则：什么是红线？（分号分隔）')
+			.setDesc('例：不编造数据；核心定义必须讲对')
+			.addText(t => t.setValue(r.forbidden.join('；')).onChange(v => {
+				r.forbidden = v.split(/[；;]/).map(x => x.trim()).filter(Boolean);
+			}));
 
-		contentEl.createEl('h3', { text: '提示词槽位（向导控件 + prompt 模板）' });
+		contentEl.createEl('h3', { text: '槽位（向导里的输入框；每个槽位 = 一句拼进指令的话 + 你填的值）' });
 		r.slots.forEach((slot, i) => {
 			const box = contentEl.createDiv({ cls: 'fn-subconflict' });
 			const head = new Setting(box).setName(`#${i + 1} ${slot.label}（${slot.type}）`);
@@ -149,26 +156,30 @@ class RecipeEditModal extends Modal {
 				r.slots.splice(i, 1);
 				this.onOpen(); void this.onDone();
 			}));
-			new Setting(box).setName('槽位 id（进 frontmatter）').addText(t => t.setValue(slot.id).onChange(v => { slot.id = v.trim(); }));
-			new Setting(box).setName('显示名').addText(t => t.setValue(slot.label).onChange(v => { slot.label = v; }));
-			new Setting(box).setName('类型').addDropdown(dd => {
-				dd.addOption('select', '单选');
-				dd.addOption('number', '数值');
+			const rowA = box.createDiv({ cls: 'fn-two-col' });
+			new Setting(rowA).setName('槽位 id（英文代号，进产物记录）').addText(t => t.setValue(slot.id).onChange(v => { slot.id = v.trim(); }));
+			new Setting(rowA).setName('显示名（向导里展示的名字）').addText(t => t.setValue(slot.label).onChange(v => { slot.label = v; }));
+			const rowB = box.createDiv({ cls: 'fn-two-col' });
+			new Setting(rowB).setName('输入方式').addDropdown(dd => {
+				dd.addOption('select', '下拉单选');
+				dd.addOption('number', '数字');
 				dd.addOption('text', '自由文本');
 				dd.setValue(slot.type).onChange(v => { slot.type = v as RecipeSlot['type']; });
 			});
-			new Setting(box).setName('prompt 模板（{value} 为用户值；{label} 为显示名）')
+			new Setting(rowB).setName('默认值').addText(t => t.setValue(slot.deflt ?? '').onChange(v => { slot.deflt = v; }));
+			new Setting(box).setName('拼进指令的句子（{value}=用户填的值，{label}=显示名）')
+				.setDesc('生成时这行字会连同用户填写的值一起发给 AI。例：以{value}的口吻复述知识')
 				.addText(t => t.setValue(slot.prompt ?? '').onChange(v => { slot.prompt = v; }));
-			new Setting(box).setName('可选值（单选；逗号分隔）')
+			new Setting(box).setName('下拉选项（仅"下拉单选"；逗号分隔）')
 				.addText(t => t.setValue((slot.values ?? []).join(',')).onChange(v => {
 					slot.values = v.split(/[,，]/).map(x => x.trim()).filter(Boolean);
 				}));
-			new Setting(box).setName('默认值').addText(t => t.setValue(slot.deflt ?? '').onChange(v => { slot.deflt = v; }));
-			new Setting(box).setName('数值下限').addText(t => t.setValue(slot.min != null ? String(slot.min) : '').onChange(v => {
+			const rowC = box.createDiv({ cls: 'fn-two-col' });
+			new Setting(rowC).setName('数字最小值（可空）').addText(t => t.setValue(slot.min != null ? String(slot.min) : '').onChange(v => {
 				if (v.trim() === '') { slot.min = undefined; return; }
 				const n = parseFloat(v); if (Number.isFinite(n)) slot.min = n;
 			}));
-			new Setting(box).setName('数值上限').addText(t => t.setValue(slot.max != null ? String(slot.max) : '').onChange(v => {
+			new Setting(rowC).setName('数字最大值（可空）').addText(t => t.setValue(slot.max != null ? String(slot.max) : '').onChange(v => {
 				if (v.trim() === '') { slot.max = undefined; return; }
 				const n = parseFloat(v); if (Number.isFinite(n)) slot.max = n;
 			}));

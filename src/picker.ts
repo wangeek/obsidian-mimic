@@ -1,4 +1,4 @@
-/** 素材选择器：搜索 + 复选多选知识点笔记 */
+/** 素材选择器：搜索 + 复选多选知识点笔记；也可一键改用当前打开的笔记 */
 import { App, ButtonComponent, Modal, Setting } from 'obsidian';
 import type { KpNote } from './types';
 
@@ -10,11 +10,13 @@ export class KpPickerModal extends Modal {
 	private resolveFn!: (picked: KpNote[]) => void;
 	private resolved = false;
 	private all: KpNote[];
+	private current: KpNote | null;
 
-	constructor(app: App, notes: KpNote[]) {
+	constructor(app: App, notes: KpNote[], current: KpNote | null = null) {
 		super(app);
 		this.all = notes;
-		this.setTitle('Mimic · 选择加工素材（知识点）');
+		this.current = current;
+		this.setTitle('Mimic · 选择加工素材');
 	}
 
 	/** 返回 Promise，resolve 选中的知识点（取消/关闭返回 []） */
@@ -35,10 +37,21 @@ export class KpPickerModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this;
+		if (this.current) {
+			new Setting(contentEl)
+				.setName('当前笔记')
+				.setDesc('不想从目录里挑？直接拿正在编辑的这篇当素材（不受知识点目录限制）')
+				.addButton(b => b
+					.setButtonText(`用「${this.current!.title}」作素材`)
+					.onClick(() => {
+						this.resolveOnce([this.current!]);
+						this.close();
+					}));
+		}
 		new Setting(contentEl)
-			.setName('搜索')
+			.setName('从知识点目录勾选')
 			.addText(t => t
-				.setPlaceholder('标题 / 章节 / 编号')
+				.setPlaceholder('搜索：标题 / 章节 / 编号')
 				.onChange(v => { this.query = v.trim(); this.renderList(); }));
 		this.listEl = contentEl.createDiv({ cls: 'fn-picker-list' });
 		new Setting(contentEl)

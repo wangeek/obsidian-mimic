@@ -46,11 +46,14 @@ export async function writeComposedNote(
 		.map(([k, v]) => `${k}: ${fmValue(v)}`)
 		.join('\n');
 
+	// 链接目标用文件名（去目录去扩展名）：知识点与库外普通笔记（当前笔记入口）都能回链
 	const links = kps
 		.map(k => {
-			const link = `- [[${k.kpId}-${safeName(k.title)}|${k.title}]]`;
+			const fileName = k.path.split('/').pop()?.replace(/\.md$/i, '') || String(k.kpId);
+			const link = `- [[${fileName}|${k.title}]]`;
 			const note = (meta.linkNotes[k.title] ?? '').trim();
-			return note ? `${link} — ${note}` : `${link}（第${k.chapter}章 ${k.chapterTitle}）`;
+			if (note) return `${link} — ${note}`;
+			return k.chapter ? `${link}（第${k.chapter}章 ${k.chapterTitle}）` : link;
 		})
 		.join('\n');
 

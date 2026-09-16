@@ -44,10 +44,11 @@ export class ComposeWizard extends Modal {
 	private renderParams() {
 		const { contentEl } = this;
 		contentEl.empty();
-		contentEl.createEl('p', {
-			cls: 'fn-muted',
-			text: `素材：${this.kps.map(k => k.title).join('、')}`,
-		});
+		const names = this.kps.map(k => k.title);
+		const label = names.length > 6
+			? names.slice(0, 6).join('、') + ` 等 ${names.length} 篇`
+			: names.join('、');
+		contentEl.createEl('p', { cls: 'fn-muted', text: `素材：${label}` });
 
 		const recipes = this.plugin.settings.recipes;
 		new Setting(contentEl).setName('配方').addDropdown(dd => {
@@ -119,16 +120,17 @@ export class ComposeWizard extends Modal {
 			if (line) paramsLines.push(line);
 		}
 
-		// 素材：正文小节（核心定义/关键要点）优先，frontmatter/开头摘录兜底
+		// 素材：正文小节（核心定义/关键要点）优先，开头摘录兜底；
+		// 库外笔记（如"加工当前笔记"）无小节结构，直接用摘录
 		const points = await Promise.all(this.kps.map(async k => {
 			const sec = await this.plugin.readKpSections(k.path);
+			const chapterLine = k.chapter
+				? `第${k.chapter}章 ${k.chapterTitle}${k.section ? ' ' + k.section : ''}`
+				: (k.external ? '（vault 内普通笔记，全文摘录见上）' : '');
 			return {
 				title: k.title,
 				coreDefinition: k.definition || sec.coreDefinition || sec.excerpt,
-				keyPoints: [
-					sec.keyPoints,
-					`第${k.chapter}章 ${k.chapterTitle}${k.section ? ' ' + k.section : ''}`,
-				].filter(Boolean).join('\n'),
+				keyPoints: [sec.keyPoints, chapterLine].filter(Boolean).join('\n'),
 			};
 		}));
 
@@ -236,7 +238,7 @@ export class ComposeWizard extends Modal {
 					model: st.model,
 					recipe: recipe.id,
 					params: { ...this.slotValues },
-					kpIds: this.kps.map(k => k.kpId),
+					kpIds: this.kps.filter(k => !k.external && k.kpId > 0).map(k => k.kpId),
 					linkNotes: this.result!.linkNotes,
 				},
 				this.kps,
