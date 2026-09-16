@@ -47,12 +47,16 @@ def migrate(src_dir: Path, vault: Path) -> None:
     total = len(rows)
     print(f"knowledge points: {total}")
 
+    # 第一遍：id -> 安全标题映射（wiki-link 目标必须与文件名完全一致）
+    id2title = {r["id"]: safe_name(r["title"]) for r in rows}
+
     kp_root = vault / "知识点"
     if kp_root.exists():
         raise SystemExit(f"target exists: {kp_root}（请先删除旧目录再迁移）")
     kp_root.mkdir(parents=True)
 
     written = 0
+    missing_related = []  # (本条id, 引用但未导入的id)
     for r in rows:
         chapter_dir = kp_root / f"{r['chapter_no']}-{safe_name(r['chapter_title'] or '未命名章', 40)}"
         if not chapter_dir.exists():
@@ -96,7 +100,12 @@ def migrate(src_dir: Path, vault: Path) -> None:
             body.append("## 相关知识点")
             body.append("")
             for rid in related:
-                body.append(f"- [[{rid}-]]")
+                t = id2title.get(rid)
+                if t:
+                    body.append(f"- [[{rid}-{t}|{t}]]")
+                else:
+                    missing_related.append((r["id"], rid))
+                    body.append(f"- {rid}（未导入）")
             body.append("")
 
         out = chapter_dir / f"{r['id']}-{safe_name(r['title'])}.md"
@@ -106,6 +115,10 @@ def migrate(src_dir: Path, vault: Path) -> None:
     print(f"written: {written} notes under {kp_root}")
     if written != total:
         raise SystemExit(f"count mismatch: db={total} written={written}")
+    if missing_related:
+        print(f"warning: {len(missing_related)} related refs not importable:")
+        for a, b in missing_related[:20]:
+            print(f"  kp {a} -> {b}")
     print("done. 下一步：在 Obsidian 中安装插件 → 命令面板「导入示范配方」→ 设置中填 API Key 并按需改造配方。")
 
 
