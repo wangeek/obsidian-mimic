@@ -18,8 +18,8 @@ Obsidian 仓库成为笔记网络。交互形态对标 MindEcho 的加工向导
 （[[wiki-link]]）。知识点本身一次性导出为 377 张独立笔记
 （frontmatter 带 kp_id/章节），与加工笔记互联成网。
 
-**明确不做**：不搬 MindEcho 的 17 问 LLM 评估链——质量守门改为程序化
-校验（字数/知识点引用完整性）+ 人工定稿。
+**质量守门**：程序化校验（字数上下限可配 + 知识点引用完整性）+
+人工定稿，不引入 LLM 评估环节。
 
 ## 2. 总体架构（方案 A：双件套）
 
@@ -128,17 +128,19 @@ source: 新版教程
 
 ## 7. 记忆移交（docs/HANDOFF.md 内容要求）
 
-给接手 agent 的必要记忆，实施阶段产出，至少覆盖：
+给接手 agent 的必要记忆（**自包含，不依赖任何外部项目上下文**），
+实施阶段产出，至少覆盖：
 
 1. **MiniMax 平台事实**：key 属国内平台（api.minimaxi.com；国际站 401）；
    OpenAI 兼容 /chat/completions；M3 与 M2.x 全系是推理模型——回复带
    `<think>` 前缀必须剥离；M3 生成约 0.5~1 分钟/篇。
-2. **prompt 结构来源**：MindEcho `src-tauri/src/llm.rs`（四层注入、
-   PROMPT 结构、strip_think 实现、重试策略）——迁移时的对照锚点。
-3. **知识库契约**：frontmatter 字段、kp_id 唯一性、migrate 的一次性语义
-   （快照拷贝不回写；上游 doc-cli 更新后需重跑）。
+2. **prompt 结构说明**：四层注入（世界观 → 子矛盾与立场 → 叙事参数 →
+   知识点素材）、think 剥离与重试策略——随 `src/prompt.ts` / `src/llm.ts`
+   内联注释自描述（迁移期的来源对照仅供实施者，不进交接文档）。
+3. **知识库契约**：frontmatter 字段、kp_id 唯一性、迁移工具的一次性语义
+   （db 快照拷贝不回写；知识库更新需重跑 migrate）。
 4. **交付边界**：产物自带运行时全部信息（frontmatter 自描述、配置随
-   插件）；MindEcho 与本项目独立演化。
+   插件 data.json 与 presets.json）。
 5. **环境事实（Windows）**：PowerShell 5.1 编码坑（UTF-8 中文 body 须
    bytes、.ps1 ASCII-only）；本环境命令偶发双发（写文件用追加/幂等设计）；
    长驻服务用分离进程。
