@@ -17,6 +17,7 @@ Pick knowledge notes, choose a **recipe** (stage + taboos + prompt slots), and a
 - **Material picker** — fuzzy search (title / chapter / id) with multi-select checkboxes across the whole knowledge base
 - **Two-layer draft** — core segment (knowledge-dense, locked) + narrative shell (editable), plus per-note one-liners for the outgoing wiki-links
 - **Programmatic gatekeeping** — configurable word-count bounds, then human final edit — no LLM judge by design
+- **Bilingual UI** — auto-switches between Chinese and English based on Obsidian's UI language (recipes stay as you wrote them)
 - **Command palette** — `Mimic: compose`, `Import seed recipes`
 
 ## Install
@@ -86,6 +87,7 @@ Example slot: label 模仿姿态 (select), template `以{value}的口吻复述�
 - **素材选择器**：标题 / 章节 / 编号模糊搜索，复选多选全库知识点
 - **两层定稿**：核心段（知识密度最高，只读锁定）+ 叙事外壳（可编辑），外加逐条知识点的一句话关联说明
 - **程序化守门**：字数上下限可配 + 人工定稿——设计上不引入 LLM 评估
+- **中英双语**：根据 Obsidian 界面语言自动切换（zh / en）；配方内容保持你写的原样
 - **命令面板**：`拟态加工：知识点 → 拟态笔记`、`导入示范配方（追加，不覆盖）`
 
 ## 安装

@@ -14,6 +14,10 @@
 
 ## 2. prompt 结构（随代码自描述）
 
+i18n：`src/i18n.ts` 仿 lottery 模式——EN 为基准字典 + `TranslationKey` 编译期
+保证 ZH 键同步；`window.moment.locale()` 探测（zh* → zh）；仅 UI chrome 双语，
+**prompt 装配与配方内容保持中文**（内容数据，不随界面语言切换）。
+
 模仿-扭曲框架：模仿底线（核心定义原样或等价出现）+ 扭曲边界（不编造、
 遵禁则）。【模仿-扭曲参数】区由配方槽位渲染——每个槽位自带 prompt 模板
 （`{value}`/`{label}` 占位）。输出严格 JSON
