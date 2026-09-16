@@ -7,6 +7,8 @@ export interface ComposeMeta {
 	recipe: string;
 	params: Record<string, string>;
 	kpIds: number[];
+	/** 关联知识点一句话说明（键 = 知识点标题）；空则回退章节注 */
+	linkNotes: Record<string, string>;
 }
 
 function ymd(): string {
@@ -45,7 +47,11 @@ export async function writeComposedNote(
 		.join('\n');
 
 	const links = kps
-		.map(k => `- [[${k.kpId}-${safeName(k.title)}|${k.title}]]（第${k.chapter}章 ${k.chapterTitle}）`)
+		.map(k => {
+			const link = `- [[${k.kpId}-${safeName(k.title)}|${k.title}]]`;
+			const note = (meta.linkNotes[k.title] ?? '').trim();
+			return note ? `${link} — ${note}` : `${link}（第${k.chapter}章 ${k.chapterTitle}）`;
+		})
 		.join('\n');
 
 	const body = [

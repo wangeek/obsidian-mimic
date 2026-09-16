@@ -33,7 +33,9 @@ export class ComposeWizard extends Modal {
 		this.slotValues = {};
 		const r = this.plugin.settings.recipes[recipeIdx];
 		for (const s of r?.slots ?? []) {
-			this.slotValues[s.id] = s.deflt ?? (s.type === 'number' ? '1200' : s.values?.[0] ?? '');
+			this.slotValues[s.id] = s.deflt ?? (s.type === 'number'
+				? (s.min != null && s.max != null ? String(Math.round(((s.min + s.max) / 2) * 100) / 100) : '')
+				: s.values?.[0] ?? '');
 		}
 	}
 
@@ -71,9 +73,13 @@ export class ComposeWizard extends Modal {
 					dd.setValue(this.slotValues[s.id] ?? '').onChange(v => { this.slotValues[s.id] = v; });
 				});
 			} else if (s.type === 'number') {
-				set.addText(t => t
-					.setValue(this.slotValues[s.id] ?? '')
-					.onChange(v => { this.slotValues[s.id] = v; }));
+				set.addText(t => {
+					t.inputEl.type = 'number';
+					if (s.min != null) t.inputEl.min = String(s.min);
+					if (s.max != null) t.inputEl.max = String(s.max);
+					t.setValue(this.slotValues[s.id] ?? '')
+						.onChange(v => { this.slotValues[s.id] = v; });
+				});
 			} else {
 				set.addTextArea(t => t
 					.setValue(this.slotValues[s.id] ?? '')
@@ -98,15 +104,33 @@ export class ComposeWizard extends Modal {
 
 		const paramsLines: string[] = [];
 		for (const s of r.slots) {
-			const line = renderSlot(s, this.slotValues[s.id] ?? '');
+			let v = (this.slotValues[s.id] ?? '').trim();
+			if (s.type === 'number' && v !== '') {
+				// 超出槽位 min/max 的数值在生成前钳制回区间
+				const n = parseFloat(v);
+				if (Number.isFinite(n)) {
+					const lo = s.min != null ? s.min : -Infinity;
+					const hi = s.max != null ? s.max : Infinity;
+					const c = Math.min(hi, Math.max(lo, n));
+					if (c !== n) { v = String(c); this.slotValues[s.id] = v; }
+				}
+			}
+			const line = renderSlot(s, v);
 			if (line) paramsLines.push(line);
 		}
 
-		const points = await Promise.all(this.kps.map(async k => ({
-			title: k.title,
-			coreDefinition: k.definition || await this.plugin.readKpContent(k.path).then(t => t.slice(0, 500)),
-			keyPoints: `第${k.chapter}章 ${k.chapterTitle}${k.section ? ' ' + k.section : ''}`,
-		})));
+		// 素材：正文小节（核心定义/关键要点）优先，frontmatter/开头摘录兜底
+		const points = await Promise.all(this.kps.map(async k => {
+			const sec = await this.plugin.readKpSections(k.path);
+			return {
+				title: k.title,
+				coreDefinition: k.definition || sec.coreDefinition || sec.excerpt,
+				keyPoints: [
+					sec.keyPoints,
+					`第${k.chapter}章 ${k.chapterTitle}${k.section ? ' ' + k.section : ''}`,
+				].filter(Boolean).join('\n'),
+			};
+		}));
 
 		const { system, user } = buildGeneratePrompt({
 			worldview: r.worldview,
@@ -120,10 +144,18 @@ export class ComposeWizard extends Modal {
 		try {
 			const raw = await chat(st, system, user, 0.7);
 			const v = parseJsonLoose(raw);
+			const linkNotes: Record<string, string> = {};
+			const ln = v.link_notes;
+			if (ln && typeof ln === 'object' && !Array.isArray(ln)) {
+				for (const [t, note] of Object.entries(ln as Record<string, unknown>)) {
+					linkNotes[t.trim()] = String(note ?? '').trim();
+				}
+			}
 			const res: ComposeResult = {
 				title: String(v.title ?? ''),
 				coreSegment: String(v.core_segment ?? ''),
 				narrativeShell: String(v.narrative_shell ?? ''),
+				linkNotes,
 			};
 			if (!res.title || !res.coreSegment || !res.narrativeShell) {
 				throw new Error('回复缺少 title / core_segment / narrative_shell');
@@ -166,6 +198,14 @@ export class ComposeWizard extends Modal {
 		shell.value = r.narrativeShell;
 		shell.addEventListener('input', () => { r.narrativeShell = shell.value; });
 
+		contentEl.createEl('p', { text: '关联知识点说明（写进文尾链接；留空则只注章节）' });
+		for (const k of this.kps) {
+			new Setting(contentEl).setName(k.title).addText(t => t
+				.setPlaceholder('一句话：本文如何使用它')
+				.setValue(r.linkNotes[k.title] ?? '')
+				.onChange(v => { r.linkNotes[k.title] = v; }));
+		}
+
 		this.statusEl = contentEl.createEl('p', { cls: 'fn-muted' });
 		const actions = new Setting(contentEl);
 		actions.addButton(b => b.setButtonText('← 参数').onClick(() => this.renderParams()));
@@ -197,6 +237,7 @@ export class ComposeWizard extends Modal {
 					recipe: recipe.id,
 					params: { ...this.slotValues },
 					kpIds: this.kps.map(k => k.kpId),
+					linkNotes: this.result!.linkNotes,
 				},
 				this.kps,
 			);

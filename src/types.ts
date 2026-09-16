@@ -40,11 +40,13 @@ export interface KpNote {
 	definition: string;
 }
 
-/** 生成结果（LLM 返回的三件套） */
+/** 生成结果（LLM 返回的三件套 + 关联说明） */
 export interface ComposeResult {
 	title: string;
 	coreSegment: string;
 	narrativeShell: string;
+	/** 关联知识点的一句话说明（键 = 知识点标题；LLM 可缺省，缺省回退章节注） */
+	linkNotes: Record<string, string>;
 }
 
 /** 插件设置（data.json） */

@@ -16,13 +16,19 @@
 
 模仿-扭曲框架：模仿底线（核心定义原样或等价出现）+ 扭曲边界（不编造、
 遵禁则）。【模仿-扭曲参数】区由配方槽位渲染——每个槽位自带 prompt 模板
-（`{value}` 占位）。输出严格 JSON `{title, core_segment, narrative_shell}`；
-宽松解析（`parseJsonLoose`）容忍代码栅栏与前后杂文。见 `src/prompt.ts`。
+（`{value}`/`{label}` 占位）。输出严格 JSON
+`{title, core_segment, narrative_shell, link_notes}`；宽松解析
+（`parseJsonLoose`）容忍代码栅栏与前后杂文。link_notes（键=知识点标题，
+值=一句话说明）写进产物文尾关联链接，LLM 缺省时回退章节注、定稿页可编辑。
+见 `src/prompt.ts`。
 
 ## 3. 知识库契约与迁移语义
 
 - 知识点笔记 frontmatter 契约见 `migrate/README.md`；`kp_id` 全库唯一，
   是 wiki-link 命名（`<kp_id>-<标题>.md`）与产物 `kp_ids` 的关联键。
+- **核心定义/关键要点写在笔记正文小节**（`## 核心定义` / `## 关键要点`），
+  不在 frontmatter——插件 prompt 素材按正文小节提取
+  （`main.ts` 的 `readKpSections`），frontmatter 只供索引（kp_id/标题/章节）。
 - 插件运行时**只读 vault 笔记**（`src/main.ts` 的 `indexKnowledge` 扫描
   frontmatter），无 sqlite 依赖。
 - 迁移工具是一次性快照拷贝：知识库更新需删 `知识点/` 重跑 migrate。
@@ -34,7 +40,8 @@
 - 槽位三种控件（select/number/text），每个槽位自带 prompt 模板——
   "立场A/B"等一切结构都是用户用槽位组装的，插件代码对内容齐次无约束。
 - 内置 2 个示范配方（`src/types.ts` SEED_RECIPES）：产业博弈（立场对
-  结构示范）+ 新闻滤镜（轻量自由示范）。
+  结构示范）+ 新闻滤镜（轻量自由示范）。仅**首启**（无历史配方数据时）
+  注入；用户删空配方后不会复活，另有「导入示范配方」命令可手动追加。
 
 ## 5. 环境事实（Windows / 本机）
 

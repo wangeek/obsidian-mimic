@@ -72,6 +72,18 @@ export default class MimicPlugin extends Plugin {
 		return '';
 	}
 
+	/** 读取知识点素材：正文小节（核心定义/关键要点）+ 无小节时的开头摘录。
+	 * 契约：migrate 把定义/要点写在正文小节而非 frontmatter（见 migrate/README.md），
+	 * 索引里的 definition 仅在手工把 core_definition 写进 frontmatter 时有值。 */
+	async readKpSections(path: string): Promise<{ coreDefinition: string; keyPoints: string; excerpt: string }> {
+		const content = await this.readKpContent(path);
+		return {
+			coreDefinition: extractSection(content, '核心定义'),
+			keyPoints: extractSection(content, '关键要点'),
+			excerpt: stripFrontmatter(content).slice(0, 300),
+		};
+	}
+
 	private async importSeedRecipes() {
 		const have = new Set(this.settings.recipes.map(r => r.id));
 		const adding = SEED_RECIPES.filter(r => !have.has(r.id));
@@ -87,7 +99,8 @@ export default class MimicPlugin extends Plugin {
 	async loadSettings() {
 		const data = await this.loadData();
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data ?? {});
-		if (!this.settings.recipes?.length) {
+		// 仅首启（或旧版无配方数据）注入示范配方；用户删空后不复活
+		if (data == null || !Array.isArray(data.recipes)) {
 			this.settings.recipes = JSON.parse(JSON.stringify(SEED_RECIPES));
 		}
 	}
@@ -95,4 +108,23 @@ export default class MimicPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+}
+
+/** 去掉 YAML frontmatter，返回正文 */
+function stripFrontmatter(content: string): string {
+	return content.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+}
+
+/** 提取正文小节："## <heading>" 到下一个标题（#~###）之前的文本；无则空串 */
+function extractSection(content: string, heading: string): string {
+	const lines = stripFrontmatter(content).split(/\r?\n/);
+	const start = lines.findIndex(l =>
+		/^##(?!#)\s/.test(l) && l.replace(/^##(?!#)\s*/, '').trim() === heading);
+	if (start < 0) return '';
+	const out: string[] = [];
+	for (let i = start + 1; i < lines.length; i++) {
+		if (/^#{1,3}\s/.test(lines[i])) break;
+		out.push(lines[i]);
+	}
+	return out.join('\n').trim();
 }

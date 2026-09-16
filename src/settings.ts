@@ -164,8 +164,14 @@ class RecipeEditModal extends Modal {
 					slot.values = v.split(/[,，]/).map(x => x.trim()).filter(Boolean);
 				}));
 			new Setting(box).setName('默认值').addText(t => t.setValue(slot.deflt ?? '').onChange(v => { slot.deflt = v; }));
-			new Setting(box).setName('数值下限').addText(t => t.setValue(slot.min != null ? String(slot.min) : '').onChange(v => { const n = parseFloat(v); if (Number.isFinite(n)) slot.min = n; }));
-			new Setting(box).setName('数值上限').addText(t => t.setValue(slot.max != null ? String(slot.max) : '').onChange(v => { const n = parseFloat(v); if (Number.isFinite(n)) slot.max = n; }));
+			new Setting(box).setName('数值下限').addText(t => t.setValue(slot.min != null ? String(slot.min) : '').onChange(v => {
+				if (v.trim() === '') { slot.min = undefined; return; }
+				const n = parseFloat(v); if (Number.isFinite(n)) slot.min = n;
+			}));
+			new Setting(box).setName('数值上限').addText(t => t.setValue(slot.max != null ? String(slot.max) : '').onChange(v => {
+				if (v.trim() === '') { slot.max = undefined; return; }
+				const n = parseFloat(v); if (Number.isFinite(n)) slot.max = n;
+			}));
 		});
 		new Setting(contentEl).addButton(b => b
 			.setButtonText('＋ 槽位')
