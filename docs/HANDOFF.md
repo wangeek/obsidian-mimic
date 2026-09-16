@@ -1,6 +1,6 @@
 # HANDOFF — 接手 agent 必读（自包含，不依赖任何外部项目上下文）
 
-本文件是 Fake News 插件的交接记忆。以下是维护此项目必需、且无法从代码
+本文件是 Mimic 插件的交接记忆。以下是维护此项目必需、且无法从代码
 快速推断的事实与教训。
 
 ## 1. MiniMax 平台事实
@@ -14,9 +14,10 @@
 
 ## 2. prompt 结构（随代码自描述）
 
-四层注入：世界观 → 拟态矛盾（立场 A/B）→ 加工参数 → 知识素材。
-输出严格 JSON `{title, core_segment, narrative_shell}`；宽松解析
-（`parseJsonLoose`）容忍代码栅栏与前后杂文。见 `src/prompt.ts` 内联全文。
+模仿-扭曲框架：模仿底线（核心定义原样或等价出现）+ 扭曲边界（不编造、
+遵禁则）。【模仿-扭曲参数】区由配方槽位渲染——每个槽位自带 prompt 模板
+（`{value}` 占位）。输出严格 JSON `{title, core_segment, narrative_shell}`；
+宽松解析（`parseJsonLoose`）容忍代码栅栏与前后杂文。见 `src/prompt.ts`。
 
 ## 3. 知识库契约与迁移语义
 
@@ -28,10 +29,12 @@
 
 ## 4. 配置体系（平台化原则）
 
-- 矛盾组与参数维度都是**数据**：设置页 GUI CRUD（`src/settings.ts`），
-  存 Obsidian 插件 `data.json`。维度 schema（`ParamDim`）驱动向导动态
-  渲染——新增自定义维度只改配置不改代码，产物 frontmatter 自动携带。
-- 插件代码对内容保持齐次无约束；prompt 收到的是数据。
+- **拟态配方（Recipe）= 舞台 + 禁则 + 提示词槽位（slots）**，全部是数据：
+  设置页 GUI CRUD（`src/settings.ts`），存 Obsidian 插件 `data.json`。
+- 槽位三种控件（select/number/text），每个槽位自带 prompt 模板——
+  "立场A/B"等一切结构都是用户用槽位组装的，插件代码对内容齐次无约束。
+- 内置 2 个示范配方（`src/types.ts` SEED_RECIPES）：产业博弈（立场对
+  结构示范）+ 新闻滤镜（轻量自由示范）。
 
 ## 5. 环境事实（Windows / 本机）
 
@@ -46,7 +49,7 @@
 - `requestUrl`（obsidian 模块）绕 CORS，是外部 HTTP 的标准路径。
 - 配置存储 = `loadData()/saveData()`（插件目录 `data.json`）。
 - 构建：`npm run build`（esbuild → main.js）；安装 = 拷贝
-  main.js/manifest.json/styles.css 到 `<vault>/.obsidian/plugins/fake-news/`。
+  main.js/manifest.json/styles.css 到 `<vault>/.obsidian/plugins/mimic/`。
 - 本工程结构与脚本风格沿用作者此前的 obsidian-lottery 模板。
 
 ## 7. 已知边界

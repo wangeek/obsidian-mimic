@@ -1,12 +1,12 @@
-/** 设置页三块：API / 矛盾组管理（GUI CRUD）/ 参数维度预设（GUI 增删） */
+/** 设置页三块：API / 配方管理（GUI CRUD，含槽位编辑）/ 使用说明 */
 import { App, Modal, Notice, PluginSettingTab, Setting } from 'obsidian';
-import type FakeNewsPlugin from './main';
-import type { ConflictGroup, SubConflict } from './types';
+import type MimicPlugin from './main';
+import type { MimicRecipe, RecipeSlot } from './types';
 
-export class FakeNewsSettingTab extends PluginSettingTab {
-	private plugin: FakeNewsPlugin;
+export class MimicSettingTab extends PluginSettingTab {
+	private plugin: MimicPlugin;
 
-	constructor(app: App, plugin: FakeNewsPlugin) {
+	constructor(app: App, plugin: MimicPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -15,8 +15,8 @@ export class FakeNewsSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 		this.renderApi();
-		this.renderConflicts();
-		this.renderDims();
+		this.renderRecipes();
+		this.renderGuide();
 	}
 
 	// ---------- ① API ----------
@@ -44,192 +44,141 @@ export class FakeNewsSettingTab extends PluginSettingTab {
 			.onChange(async v => { const n = parseInt(v, 10); if (Number.isFinite(n)) { s.maxWords = n; await this.plugin.saveSettings(); } }));
 	}
 
-	// ---------- ② 矛盾组 CRUD ----------
+	// ---------- ② 配方 CRUD ----------
 
-	private renderConflicts() {
+	private renderRecipes() {
 		const { containerEl } = this;
-		containerEl.createEl('h2', { text: '矛盾组（加工的拟态冲突内容）' });
+		containerEl.createEl('h2', { text: '拟态配方（模仿-扭曲的提示词参数集）' });
 		const s = this.plugin.settings;
 
-		s.conflicts.forEach((g, i) => {
+		s.recipes.forEach((r, i) => {
 			new Setting(containerEl)
-				.setName(g.name)
-				.setDesc(`${g.id} · ${g.sub_conflicts.length} 个子矛盾`)
+				.setName(r.name)
+				.setDesc(`${r.id} · ${r.slots.length} 个槽位${r.worldview ? ` · 舞台：${r.worldview}` : ''}`)
 				.addButton(b => b.setButtonText('编辑').onClick(() => {
-					new ConflictEditModal(this.app, g, async () => { await this.plugin.saveSettings(); this.display(); }).open();
+					new RecipeEditModal(this.app, r, async () => { await this.plugin.saveSettings(); this.display(); }).open();
 				}))
 				.addButton(b => b.setButtonText('删除').onClick(async () => {
-					s.conflicts.splice(i, 1);
+					s.recipes.splice(i, 1);
 					await this.plugin.saveSettings();
 					this.display();
 				}));
 		});
 
 		new Setting(containerEl).addButton(b => b
-			.setButtonText('＋ 新建矛盾组')
+			.setButtonText('＋ 新建配方')
 			.setCta()
 			.onClick(() => {
-				const g: ConflictGroup = {
-					id: `custom_${Date.now()}`,
-					name: '新矛盾组',
-					worldview: 'A国 vs B国（自行设定虚构世界观）',
-					forbidden: ['不映射现实国家', '不编造数据'],
-					sub_conflicts: [newSubConflict()],
+				const r: MimicRecipe = {
+					id: `recipe_${Date.now()}`,
+					name: '新配方',
+					worldview: '',
+					forbidden: ['不得编造事实与数据'],
+					slots: [],
 				};
-				s.conflicts.push(g);
+				s.recipes.push(r);
 				void this.plugin.saveSettings();
-				new ConflictEditModal(this.app, g, async () => { await this.plugin.saveSettings(); this.display(); }).open();
+				new RecipeEditModal(this.app, r, async () => { await this.plugin.saveSettings(); this.display(); }).open();
 			}));
 	}
 
-	// ---------- ③ 维度预设 ----------
+	// ---------- ③ 使用说明 ----------
 
-	private renderDims() {
-		const { containerEl } = this;
-		containerEl.createEl('h2', { text: '参数维度（向导页动态渲染）' });
-		const s = this.plugin.settings;
-
-		s.dims.forEach((d, i) => {
-			const set = new Setting(containerEl)
-				.setName(`${d.label}（${d.id}）`)
-				.setDesc(d.type === 'select' ? (d.values ?? []).join(' / ') : `数值 ${d.min ?? '?'}~${d.max ?? '?'}`);
-			set.addButton(b => b.setButtonText('编辑').onClick(() => {
-				new DimEditModal(this.app, d, async () => { await this.plugin.saveSettings(); this.display(); }).open();
-			}));
-			set.addButton(b => b.setButtonText('删除').onClick(async () => {
-				s.dims.splice(i, 1);
-				await this.plugin.saveSettings();
-				this.display();
-			}));
-		});
-
-		new Setting(containerEl).addButton(b => b
-			.setButtonText('＋ 新维度')
-			.setCta()
-			.onClick(() => {
-				s.dims.push({ id: `dim_${Date.now()}`, label: '新维度', type: 'select', values: ['选项1', '选项2'], deflt: '选项1' });
-				void this.plugin.saveSettings();
-				this.display();
-			}));
-
-		containerEl.createEl('p', {
-			cls: 'setting-item-description',
-			text: '维度只是注入 prompt 的数据：新增自定义维度（如"受众视角"）无需改代码，向导与产物 frontmatter 自动携带。',
-		});
+	private renderGuide() {
+		const el = this.containerEl.createEl('details');
+		el.createEl('summary', { text: '如何配置一个配方（示例）' });
+		const body = el.createDiv();
+		body.innerHTML = `
+<p><b>配方 = 舞台 + 禁则 + 槽位。</b>每个槽位是向导里的一个输入控件，并自带一段
+prompt 模板（<code>{value}</code> 为用户填的值）。生成时各槽位片段按顺序拼进
+【模仿-扭曲参数】区。</p>
+<p>示例——"课堂讲授的保守教授"配方：</p>
+<ul>
+  <li>舞台：<code>无（留空即按现实语境写作）</code></li>
+  <li>槽位1：模仿姿态（select）——模板 <code>以{value}的口吻复述知识</code>，可选：老教授 / 科普作家 / 播客主播</li>
+  <li>槽位2：扭曲向量（text）——模板 <code>叙述倾向：{value}</code>，默认："着重强调考点，弱化争议"</li>
+  <li>槽位3：扭曲强度（number 0~1）——模板 <code>口语化与戏剧化程度：{value}</code></li>
+</ul>
+<p>旧的"立场A/立场B"结构只是槽位的一种组装方式（见示范配方"产业博弈"）：
+两个 text 槽位 + 一个倾斜方向 select。任何结构都由你自己组合，插件不加约束。</p>`;
 	}
 }
 
-function newSubConflict(): SubConflict {
+function newSlot(): RecipeSlot {
 	return {
-		id: `sub_${Date.now()}`,
-		stance_a: { name: '立场A', core_claim: 'A 方的核心主张', keywords: [] },
-		stance_b: { name: '立场B', core_claim: 'B 方的核心主张', keywords: [] },
-		base_conflict: 0.8,
+		id: `slot_${Date.now()}`,
+		label: '新槽位',
+		type: 'select',
+		prompt: '{label}：{value}',
+		values: ['选项1', '选项2'],
+		deflt: '选项1',
 	};
 }
 
-/** 矛盾组编辑 Modal（世界观/禁忌/子矛盾 CRUD/立场字段） */
-class ConflictEditModal extends Modal {
-	private g: ConflictGroup;
+/** 配方编辑 Modal（舞台/禁则/槽位 CRUD） */
+class RecipeEditModal extends Modal {
+	private r: MimicRecipe;
 	private onDone: () => Promise<void>;
 
-	constructor(app: App, g: ConflictGroup, onDone: () => Promise<void>) {
+	constructor(app: App, r: MimicRecipe, onDone: () => Promise<void>) {
 		super(app);
-		this.g = g;
+		this.r = r;
 		this.onDone = onDone;
-		this.setTitle(`编辑矛盾组：${g.name}`);
+		this.setTitle(`编辑配方：${r.name}`);
 		this.modalEl.addClass('fn-wizard');
 	}
 
 	onOpen() {
 		const { contentEl } = this;
-		const g = this.g;
+		const r = this.r;
 
-		new Setting(contentEl).setName('名称').addText(t => t.setValue(g.name).onChange(v => { g.name = v; }));
-		new Setting(contentEl).setName('id').addText(t => t.setValue(g.id).onChange(v => { g.id = v.trim(); }));
-		new Setting(contentEl).setName('世界观').addTextArea(t => t.setValue(g.worldview).onChange(v => { g.worldview = v; }));
-		new Setting(contentEl).setName('禁忌（分号分隔）').addText(t => t.setValue(g.forbidden.join('；')).onChange(v => {
-			g.forbidden = v.split(/[；;]/).map(x => x.trim()).filter(Boolean);
+		new Setting(contentEl).setName('名称').addText(t => t.setValue(r.name).onChange(v => { r.name = v; }));
+		new Setting(contentEl).setName('id').addText(t => t.setValue(r.id).onChange(v => { r.id = v.trim(); }));
+		new Setting(contentEl).setName('舞台 / 世界观（可空）')
+			.setDesc('虚构舞台（如"糖果国 vs 齿轮国"）；留空则按现实语境写作')
+			.addTextArea(t => t.setValue(r.worldview).onChange(v => { r.worldview = v; }));
+		new Setting(contentEl).setName('禁则（分号分隔）').addText(t => t.setValue(r.forbidden.join('；')).onChange(v => {
+			r.forbidden = v.split(/[；;]/).map(x => x.trim()).filter(Boolean);
 		}));
 
-		contentEl.createEl('h3', { text: '子矛盾' });
-		g.sub_conflicts.forEach((sub, i) => {
+		contentEl.createEl('h3', { text: '提示词槽位（向导控件 + prompt 模板）' });
+		r.slots.forEach((slot, i) => {
 			const box = contentEl.createDiv({ cls: 'fn-subconflict' });
-			const head = new Setting(box).setName(`#${i + 1} ${sub.stance_a.name} vs ${sub.stance_b.name}`);
+			const head = new Setting(box).setName(`#${i + 1} ${slot.label}（${slot.type}）`);
 			head.addButton(b => b.setButtonText('删除').onClick(() => {
-				g.sub_conflicts.splice(i, 1);
+				r.slots.splice(i, 1);
 				this.onOpen(); void this.onDone();
 			}));
-			new Setting(box).setName('子矛盾 id').addText(t => t.setValue(sub.id).onChange(v => { sub.id = v.trim(); }));
-			new Setting(box).setName('基础冲突度（0~1）').addText(t => t
-				.setValue(String(sub.base_conflict))
-				.onChange(v => { const n = parseFloat(v); if (Number.isFinite(n)) sub.base_conflict = n; }));
-			this.stanceEditor(box, sub, 'a');
-			this.stanceEditor(box, sub, 'b');
+			new Setting(box).setName('槽位 id（进 frontmatter）').addText(t => t.setValue(slot.id).onChange(v => { slot.id = v.trim(); }));
+			new Setting(box).setName('显示名').addText(t => t.setValue(slot.label).onChange(v => { slot.label = v; }));
+			new Setting(box).setName('类型').addDropdown(dd => {
+				dd.addOption('select', '单选');
+				dd.addOption('number', '数值');
+				dd.addOption('text', '自由文本');
+				dd.setValue(slot.type).onChange(v => { slot.type = v as RecipeSlot['type']; });
+			});
+			new Setting(box).setName('prompt 模板（{value} 为用户值；{label} 为显示名）')
+				.addText(t => t.setValue(slot.prompt ?? '').onChange(v => { slot.prompt = v; }));
+			new Setting(box).setName('可选值（单选；逗号分隔）')
+				.addText(t => t.setValue((slot.values ?? []).join(',')).onChange(v => {
+					slot.values = v.split(/[,，]/).map(x => x.trim()).filter(Boolean);
+				}));
+			new Setting(box).setName('默认值').addText(t => t.setValue(slot.deflt ?? '').onChange(v => { slot.deflt = v; }));
+			new Setting(box).setName('数值下限').addText(t => t.setValue(slot.min != null ? String(slot.min) : '').onChange(v => { const n = parseFloat(v); if (Number.isFinite(n)) slot.min = n; }));
+			new Setting(box).setName('数值上限').addText(t => t.setValue(slot.max != null ? String(slot.max) : '').onChange(v => { const n = parseFloat(v); if (Number.isFinite(n)) slot.max = n; }));
 		});
 		new Setting(contentEl).addButton(b => b
-			.setButtonText('＋ 子矛盾')
-			.onClick(() => { g.sub_conflicts.push(newSubConflict()); this.onOpen(); void this.onDone(); }));
+			.setButtonText('＋ 槽位')
+			.onClick(() => { r.slots.push(newSlot()); this.onOpen(); void this.onDone(); }));
 
 		new Setting(contentEl).addButton(b => b
 			.setButtonText('保存')
 			.setCta()
 			.onClick(async () => {
-				if (!g.id || !g.name || !g.sub_conflicts.length) {
-					new Notice('id / 名称 / 至少一个子矛盾必填');
+				if (!r.id || !r.name) {
+					new Notice('id / 名称必填');
 					return;
 				}
-				await this.onDone();
-				this.close();
-			}));
-	}
-
-	private stanceEditor(container: HTMLElement, sub: SubConflict, side: 'a' | 'b') {
-		const key = side === 'a' ? 'stance_a' : 'stance_b';
-		const st = sub[key];
-		new Setting(container).setName(`立场${side.toUpperCase()} 名称`).addText(t => t.setValue(st.name).onChange(v => { st.name = v; }));
-		new Setting(container).setName(`立场${side.toUpperCase()} 核心主张`).addTextArea(t => t.setValue(st.core_claim).onChange(v => { st.core_claim = v; }));
-		new Setting(container).setName(`立场${side.toUpperCase()} 关键词（逗号分隔）`)
-			.addText(t => t.setValue(st.keywords.join(',')).onChange(v => {
-				st.keywords = v.split(/[,，]/).map(x => x.trim()).filter(Boolean);
-			}));
-	}
-}
-
-/** 维度编辑 Modal */
-class DimEditModal extends Modal {
-	private d: import('./types').ParamDim;
-	private onDone: () => Promise<void>;
-
-	constructor(app: App, d: import('./types').ParamDim, onDone: () => Promise<void>) {
-		super(app);
-		this.d = d;
-		this.onDone = onDone;
-		this.setTitle(`编辑维度：${d.label}`);
-	}
-
-	onOpen() {
-		const { contentEl } = this;
-		const d = this.d;
-		new Setting(contentEl).setName('id（进 frontmatter 的键名）').addText(t => t.setValue(d.id).onChange(v => { d.id = v.trim(); }));
-		new Setting(contentEl).setName('显示名').addText(t => t.setValue(d.label).onChange(v => { d.label = v; }));
-		new Setting(contentEl).setName('类型').addDropdown(dd => {
-			dd.addOption('select', '单选');
-			dd.addOption('number', '数值');
-			dd.setValue(d.type).onChange(v => { d.type = v as 'select' | 'number'; });
-		});
-		new Setting(contentEl).setName('可选值（单选；逗号分隔）')
-			.addText(t => t.setValue((d.values ?? []).join(',')).onChange(v => {
-				d.values = v.split(/[,，]/).map(x => x.trim()).filter(Boolean);
-			}));
-		new Setting(contentEl).setName('默认值').addText(t => t.setValue(d.deflt ?? '').onChange(v => { d.deflt = v; }));
-		new Setting(contentEl).setName('数值下限').addText(t => t.setValue(d.min != null ? String(d.min) : '').onChange(v => { const n = parseFloat(v); if (Number.isFinite(n)) d.min = n; }));
-		new Setting(contentEl).setName('数值上限').addText(t => t.setValue(d.max != null ? String(d.max) : '').onChange(v => { const n = parseFloat(v); if (Number.isFinite(n)) d.max = n; }));
-		new Setting(contentEl).addButton(b => b
-			.setButtonText('保存')
-			.setCta()
-			.onClick(async () => {
-				if (!d.id || !d.label) { new Notice('id / 显示名必填'); return; }
 				await this.onDone();
 				this.close();
 			}));

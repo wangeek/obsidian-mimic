@@ -7,7 +7,7 @@
  * - 偶发 5xx：重试 2 次（指数退避）。
  */
 import { requestUrl } from 'obsidian';
-import type { FakeNewsSettings } from './types';
+import type { MimicSettings } from './types';
 
 export function stripThink(s: string): string {
 	return s.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
@@ -40,7 +40,7 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 /** 一次 chat 调用（含剥 think） */
 export async function chat(
-	settings: FakeNewsSettings, system: string, user: string, temperature: number
+	settings: MimicSettings, system: string, user: string, temperature: number
 ): Promise<string> {
 	let lastErr = '';
 	for (let attempt = 0; attempt < 3; attempt++) {

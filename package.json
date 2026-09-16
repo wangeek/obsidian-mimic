@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-fake-news",
+	"name": "obsidian-mimic",
 	"version": "0.1.0",
-	"description": "把知识点笔记加工成拟态叙述笔记的 Obsidian 插件",
+	"description": "拟态加工（模仿-扭曲）知识笔记的 Obsidian 插件",
 	"main": "main.js",
 	"author": "tp906 <tp906@163.com>",
 	"license": "MIT",

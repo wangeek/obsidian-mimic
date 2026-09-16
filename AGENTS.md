@@ -1,17 +1,19 @@
-# obsidian-fake-news — agent 工作说明
+# obsidian-mimic — agent 工作说明
 
-知识拟态加工 Obsidian 插件（TypeScript + esbuild，官方插件 API）。
+拟态加工（模仿-扭曲）Obsidian 插件（TypeScript + esbuild，官方插件 API）。
 
 ## 约定
 
 - **接手必读 `docs/HANDOFF.md`**（平台事实/契约/环境坑，自包含）。
-- 设计文档 `docs/2026-09-16-fake-news-design.md` 为唯一需求真源。
+- 设计文档 `docs/2026-09-16-fake-news-design.md`（历史名）+ 本轮
+  mimic 重构（配方/槽位模型）以 `src/types.ts` 与 README 为准。
 - Obsidian API 以官方 sample-plugin 为真源，**不凭记忆写 API**；改动
   涉及 API 时先核对再写。
-- 构建验证：`npm run build`（esbuild 产出 main.js，零错误才算过）。
+- 构建验证：`npm run build`（esbuild 产出 main.js，零错误才算过）；
+  类型检查 `npx tsc --noEmit --skipLibCheck`。
 - 迁移工具 `migrate/` 是一次性产物，不做持续维护。
-- 矛盾组/参数维度是数据不是代码：功能增强优先走配置扩展，保持插件对
-  内容齐次（平台化原则）。
+- 配方/槽位是数据不是代码：功能增强优先走配置扩展，保持插件对内容
+  齐次（平台化原则）。
 
 ## 环境
 

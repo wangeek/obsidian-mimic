@@ -1,10 +1,10 @@
-/** 产物落盘：frontmatter（参数快照 + kp_ids）+ 拟态正文 + 关联知识点链接 */
+/** 产物落盘：frontmatter（配方与槽位快照 + kp_ids）+ 拟态正文 + 关联知识点链接 */
 import { App, TFile, normalizePath } from 'obsidian';
 import type { ComposeResult, KpNote } from './types';
 
 export interface ComposeMeta {
 	model: string;
-	conflict: string;
+	recipe: string;
 	params: Record<string, string>;
 	kpIds: number[];
 }
@@ -36,7 +36,7 @@ export async function writeComposedNote(
 		title: r.title,
 		created: ymd(),
 		model: meta.model,
-		conflict: meta.conflict,
+		recipe: meta.recipe,
 		params: meta.params,
 		kp_ids: meta.kpIds,
 	};

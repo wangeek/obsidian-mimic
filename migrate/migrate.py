@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Fake News 一次性迁移工具（跑完即弃，不再维护）。
+"""Mimic 一次性迁移工具（跑完即弃，不再维护）。
 
-把知识库 sqlite（377 知识点）导出为 Obsidian 仓库的知识点笔记，
-并把矛盾组 JSON 汇总为本插件仓库的种子文件。
+把知识库 sqlite（377 知识点）导出为 Obsidian 仓库的知识点笔记。
+（拟态配方为插件内置示范 + 设置页 GUI 维护，无需迁移。）
 
 用法（PowerShell）：
-  python migrate.py --src D:/Lab/MindEcho/data --vault "D:/path/to/your/vault"
+  python migrate.py --src D:/path/to/knowledge-data --vault "D:/path/to/your/vault"
 
 产物：
-  1) <vault>/知识点/<章>-<章标题>/<kp_id>-<标题>.md   （frontmatter 契约见 README）
-  2) 本仓库 assets/seed/conflicts.json                 （种子，首启后在插件设置中演化）
+  <vault>/知识点/<章>-<章标题>/<kp_id>-<标题>.md   （frontmatter 契约见 README）
 
 一次性语义：sqlite 为快照拷贝，不回写任何上游；知识库更新后需重跑本工具。
 """
@@ -17,11 +16,7 @@ import argparse
 import json
 import re
 import sqlite3
-import shutil
 from pathlib import Path
-
-HERE = Path(__file__).resolve().parent
-REPO = HERE.parent
 
 
 def safe_name(s: str, limit: int = 60) -> str:
@@ -111,21 +106,7 @@ def migrate(src_dir: Path, vault: Path) -> None:
     print(f"written: {written} notes under {kp_root}")
     if written != total:
         raise SystemExit(f"count mismatch: db={total} written={written}")
-
-    # 矛盾组种子：conflicts/*.json 合并为数组
-    conflicts_dir = src_dir / "conflicts"
-    seed_path = REPO / "assets" / "seed" / "conflicts.json"
-    groups = []
-    if conflicts_dir.is_dir():
-        for f in sorted(conflicts_dir.glob("*.json")):
-            try:
-                groups.append(json.loads(f.read_text(encoding="utf-8")))
-            except Exception as e:
-                print(f"skip bad conflict json: {f.name}: {e}")
-    seed_path.parent.mkdir(parents=True, exist_ok=True)
-    seed_path.write_text(json.dumps(groups, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"conflict seed: {len(groups)} groups -> {seed_path}")
-    print("done. 下一步：在 Obsidian 中安装插件 → 命令面板运行「导入种子配置」→ 设置中确认矛盾组。")
+    print("done. 下一步：在 Obsidian 中安装插件 → 命令面板「导入示范配方」→ 设置中填 API Key 并按需改造配方。")
 
 
 def main():

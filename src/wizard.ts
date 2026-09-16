@@ -1,48 +1,45 @@
-/** 加工向导：参数页（矛盾/立场/维度参数） → 生成定稿页（编辑+校验+落盘） */
+/** 拟态向导：配方+槽位参数页 → 生成定稿页（编辑+校验+落盘） */
 import { App, Modal, Notice, Setting } from 'obsidian';
-import type FakeNewsPlugin from './main';
-import type { ComposeResult, ConflictGroup, KpNote } from './types';
-import { buildGeneratePrompt } from './prompt';
+import type MimicPlugin from './main';
+import type { ComposeResult, KpNote } from './types';
+import { buildGeneratePrompt, renderSlot } from './prompt';
 import { chat, parseJsonLoose } from './llm';
 import { writeComposedNote } from './render';
 
-interface DimValue { [dimId: string]: string }
-
 export class ComposeWizard extends Modal {
-	private plugin: FakeNewsPlugin;
+	private plugin: MimicPlugin;
 	private kps: KpNote[];
-	private conflicts: ConflictGroup[];
-	private conflictIdx = 0;
-	private subIdx = 0;
-	private dimValues: DimValue = {};
-	private step = 0;
+	private recipeIdx = 0;
+	private slotValues: Record<string, string> = {};
 
 	private result: ComposeResult | null = null;
 	private generating = false;
-	private coreArea!: HTMLTextAreaElement;
-	private shellArea!: HTMLTextAreaElement;
 	private statusEl!: HTMLElement;
 
-	constructor(app: App, plugin: FakeNewsPlugin, kps: KpNote[]) {
+	constructor(app: App, plugin: MimicPlugin, kps: KpNote[]) {
 		super(app);
 		this.plugin = plugin;
 		this.kps = kps;
-		this.conflicts = plugin.settings.conflicts;
-		this.setTitle('Fake News · 加工向导');
+		this.setTitle('Mimic · 拟态加工');
 		this.modalEl.addClass('fn-wizard');
 	}
 
 	onOpen() {
-		for (const d of this.plugin.settings.dims) {
-			this.dimValues[d.id] = d.deflt ?? (d.type === 'number' ? '1200' : d.values?.[0] ?? '');
-		}
+		this.resetSlotDefaults(0);
 		this.renderParams();
 	}
 
-	// ---------- 第 1 页：参数 ----------
+	private resetSlotDefaults(recipeIdx: number) {
+		this.slotValues = {};
+		const r = this.plugin.settings.recipes[recipeIdx];
+		for (const s of r?.slots ?? []) {
+			this.slotValues[s.id] = s.deflt ?? (s.type === 'number' ? '1200' : s.values?.[0] ?? '');
+		}
+	}
+
+	// ---------- 第 1 页：配方与槽位参数 ----------
 
 	private renderParams() {
-		this.step = 0;
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.createEl('p', {
@@ -50,44 +47,37 @@ export class ComposeWizard extends Modal {
 			text: `素材：${this.kps.map(k => k.title).join('、')}`,
 		});
 
-		const c = this.conflicts[this.conflictIdx];
-		const sub = c?.sub_conflicts[this.subIdx];
+		const recipes = this.plugin.settings.recipes;
+		new Setting(contentEl).setName('配方').addDropdown(dd => {
+			recipes.forEach((r, i) => dd.addOption(String(i), r.name));
+			dd.setValue(String(this.recipeIdx)).onChange(v => {
+				this.recipeIdx = parseInt(v, 10);
+				this.resetSlotDefaults(this.recipeIdx);
+				this.renderParams();
+			});
+		});
 
-		new Setting(contentEl).setName('矛盾组').addDropdown(dd => {
-			this.conflicts.forEach((g, i) => dd.addOption(String(i), g.name));
-			dd.setValue(String(this.conflictIdx)).onChange(v => {
-				this.conflictIdx = parseInt(v, 10); this.subIdx = 0; this.renderParams();
-			});
-		});
-		new Setting(contentEl).setName('子矛盾').addDropdown(dd => {
-			(c?.sub_conflicts ?? []).forEach((s, i) =>
-				dd.addOption(String(i), `${s.stance_a.name} vs ${s.stance_b.name}`));
-			dd.setValue(String(this.subIdx)).onChange(v => {
-				this.subIdx = parseInt(v, 10); this.renderParams();
-			});
-		});
-		if (sub) {
-			contentEl.createEl('p', {
-				cls: 'fn-stance-info',
-				text: `A：${sub.stance_a.name}——${sub.stance_a.core_claim}\nB：${sub.stance_b.name}——${sub.stance_b.core_claim}`,
-			});
+		const r = recipes[this.recipeIdx];
+		if (r?.worldview) {
+			contentEl.createEl('p', { cls: 'fn-stance-info', text: `舞台：${r.worldview}` });
 		}
 
-		// 维度参数（schema 驱动动态渲染——新维度只改配置）
-		for (const d of this.plugin.settings.dims) {
-			const s = new Setting(contentEl).setName(d.label);
-			if (d.type === 'select') {
-				s.addDropdown(dd => {
-					(d.values ?? []).forEach(v => dd.addOption(v, v));
-					dd.setValue(this.dimValues[d.id]).onChange(v => { this.dimValues[d.id] = v; });
+		// 槽位渲染（配方驱动；select/number/text 三种控件）
+		for (const s of r?.slots ?? []) {
+			const set = new Setting(contentEl).setName(s.label);
+			if (s.type === 'select') {
+				set.addDropdown(dd => {
+					(s.values ?? []).forEach(v => dd.addOption(v, v));
+					dd.setValue(this.slotValues[s.id] ?? '').onChange(v => { this.slotValues[s.id] = v; });
 				});
+			} else if (s.type === 'number') {
+				set.addText(t => t
+					.setValue(this.slotValues[s.id] ?? '')
+					.onChange(v => { this.slotValues[s.id] = v; }));
 			} else {
-				s.addText(t => t
-					.setValue(this.dimValues[d.id])
-					.onChange(v => { this.dimValues[d.id] = v; }));
-				if (d.min != null || d.max != null) {
-					s.setClass?.('fn-dim-num');
-				}
+				set.addTextArea(t => t
+					.setValue(this.slotValues[s.id] ?? '')
+					.onChange(v => { this.slotValues[s.id] = v; }));
 			}
 		}
 
@@ -103,13 +93,15 @@ export class ComposeWizard extends Modal {
 		if (this.generating) return;
 		this.generating = true;
 		const st = this.plugin.settings;
-		const c = this.conflicts[this.conflictIdx];
-		const sub = c.sub_conflicts[this.subIdx];
-		if (!sub) { new Notice('该矛盾组没有子矛盾'); this.generating = false; return; }
+		const r = st.recipes[this.recipeIdx];
+		if (!r) { this.generating = false; return; }
 
-		const paramsLine = st.dims
-			.map(d => `${d.label}：${this.dimValues[d.id] ?? ''}`)
-			.join('；');
+		const paramsLines: string[] = [];
+		for (const s of r.slots) {
+			const line = renderSlot(s, this.slotValues[s.id] ?? '');
+			if (line) paramsLines.push(line);
+		}
+
 		const points = await Promise.all(this.kps.map(async k => ({
 			title: k.title,
 			coreDefinition: k.definition || await this.plugin.readKpContent(k.path).then(t => t.slice(0, 500)),
@@ -117,38 +109,32 @@ export class ComposeWizard extends Modal {
 		})));
 
 		const { system, user } = buildGeneratePrompt({
-			worldview: c.worldview,
-			conflictName: `${c.name} / ${sub.id}`,
-			baseConflict: String(sub.base_conflict),
-			stanceAName: sub.stance_a.name,
-			stanceAClaim: sub.stance_a.core_claim,
-			stanceBName: sub.stance_b.name,
-			stanceBClaim: sub.stance_b.core_claim,
-			paramsLine,
+			worldview: r.worldview,
+			paramsLines,
 			points,
 			relatedTitles: this.kps.map(k => k.title).join('、'),
-			forbidden: c.forbidden.join('；') || '不编造数据，不映射现实国家',
+			forbidden: r.forbidden.join('；') || '不得编造事实与数据',
 		});
 
 		this.renderGenerating();
 		try {
 			const raw = await chat(st, system, user, 0.7);
 			const v = parseJsonLoose(raw);
-			const r: ComposeResult = {
+			const res: ComposeResult = {
 				title: String(v.title ?? ''),
 				coreSegment: String(v.core_segment ?? ''),
 				narrativeShell: String(v.narrative_shell ?? ''),
 			};
-			if (!r.title || !r.coreSegment || !r.narrativeShell) {
+			if (!res.title || !res.coreSegment || !res.narrativeShell) {
 				throw new Error('回复缺少 title / core_segment / narrative_shell');
 			}
-			this.result = r;
+			this.result = res;
 			this.renderResult();
 		} catch (e) {
 			this.statusEl.setText(`生成失败：${e instanceof Error ? e.message : String(e)}（可返回参数页重试）`);
-			this.contentEl.createEl('br');
-			const back = new Setting(this.contentEl);
-			back.addButton(b => b.setButtonText('← 返回参数页').onClick(() => this.renderParams()));
+			new Setting(this.contentEl).addButton(b => b
+				.setButtonText('← 返回参数页')
+				.onClick(() => this.renderParams()));
 		} finally {
 			this.generating = false;
 		}
@@ -166,19 +152,19 @@ export class ComposeWizard extends Modal {
 	// ---------- 第 2 页：定稿 ----------
 
 	private renderResult() {
-		this.step = 1;
 		const { contentEl } = this;
 		contentEl.empty();
 		const r = this.result!;
 
 		new Setting(contentEl).setName('标题').addText(t => t.setValue(r.title).onChange(v => { r.title = v; }));
-		contentEl.createEl('p', { text: '核心段（知识密度最高，不再编辑）' });
-		this.coreArea = contentEl.createEl('textarea', { cls: 'fn-core' });
-		this.coreArea.value = r.coreSegment;
-		this.coreArea.readOnly = true;
-		contentEl.createEl('p', { text: '叙事外壳（可编辑定稿）' });
-		this.shellArea = contentEl.createEl('textarea', { cls: 'fn-shell' });
-		this.shellArea.value = r.narrativeShell;
+		contentEl.createEl('p', { text: '核心段（模仿底线：知识密度最高，不再编辑）' });
+		const core = contentEl.createEl('textarea', { cls: 'fn-core' });
+		core.value = r.coreSegment;
+		core.readOnly = true;
+		contentEl.createEl('p', { text: '叙事外壳（扭曲层，可编辑定稿）' });
+		const shell = contentEl.createEl('textarea', { cls: 'fn-shell' });
+		shell.value = r.narrativeShell;
+		shell.addEventListener('input', () => { r.narrativeShell = shell.value; });
 
 		this.statusEl = contentEl.createEl('p', { cls: 'fn-muted' });
 		const actions = new Setting(contentEl);
@@ -202,15 +188,14 @@ export class ComposeWizard extends Modal {
 		const err = this.validate();
 		if (err) { new Notice(`校验未通过：${err}`); return; }
 		const st = this.plugin.settings;
-		const c = st.conflicts[this.conflictIdx];
-		const sub = c.sub_conflicts[this.subIdx];
+		const recipe = st.recipes[this.recipeIdx];
 		try {
 			const path = await writeComposedNote(
 				this.app, st.outputDir, this.result!,
 				{
 					model: st.model,
-					conflict: `${c.id}/${sub.id}`,
-					params: { ...this.dimValues },
+					recipe: recipe.id,
+					params: { ...this.slotValues },
 					kpIds: this.kps.map(k => k.kpId),
 				},
 				this.kps,
