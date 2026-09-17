@@ -65,8 +65,9 @@ export const EN = {
 
 	// ----- settings.ts -----
 	'settings.api.heading': 'API',
-	'settings.api.key': 'API Key (MiniMax domestic platform)',
+	'settings.api.key': 'API Key (OpenAI-compatible endpoint)',
 	'settings.api.baseUrl': 'Base URL',
+	'settings.api.baseUrlDesc': 'Any OpenAI-compatible endpoint works (DeepSeek / Kimi / Ollama / LM Studio …); the default is a MiniMax example',
 	'settings.api.model': 'Model',
 	'settings.api.knowledgeDir': 'Knowledge folder (vault-relative)',
 	'settings.api.outputDir': 'Output folder (vault-relative)',
@@ -183,8 +184,9 @@ export const ZH: Record<TranslationKey, string> = {
 
 	// ----- settings.ts -----
 	'settings.api.heading': 'API',
-	'settings.api.key': 'API Key（MiniMax 国内平台）',
+	'settings.api.key': 'API Key（OpenAI 兼容端点）',
 	'settings.api.baseUrl': 'Base URL',
+	'settings.api.baseUrlDesc': '任何 OpenAI 兼容端点均可（DeepSeek / Kimi / Ollama / LM Studio…）；默认值是 MiniMax 的示例',
 	'settings.api.model': '模型',
 	'settings.api.knowledgeDir': '知识点目录（vault 相对）',
 	'settings.api.outputDir': '输出目录（vault 相对）',

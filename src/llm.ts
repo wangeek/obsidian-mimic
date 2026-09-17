@@ -1,9 +1,9 @@
-/** LLM 调用（OpenAI 兼容 /chat/completions，经 Obsidian requestUrl 绕 CORS）。
- *
- * 平台事实（迁移沉淀）：
+/** LLM 调用（标准 OpenAI 兼容 /chat/completions，经 Obsidian requestUrl 绕 CORS）。
+ * 任何 OpenAI 兼容端点（MiniMax / DeepSeek / Kimi / Ollama / LM Studio…）均可，
+ * MiniMax 仅是出厂默认值。历史经验（默认端点为 MiniMax 时沉淀）：
  * - MiniMax key 属国内平台（api.minimaxi.com）；国际站对同 key 401。
  * - M3 / M2.x 全系是推理模型：回复带 <think>…</think> 前缀，必须剥离，
- *   否则正文污染且 JSON 解析错位。
+ *   否则正文污染且 JSON 解析错位（其他端点无此前缀，剥了也无害）。
  * - 偶发 5xx：重试 2 次（指数退避）。
  */
 import { requestUrl } from 'obsidian';

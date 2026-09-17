@@ -5,8 +5,11 @@
 
 ## 1. MiniMax 平台事实
 
+- 插件走标准 OpenAI 兼容 `/chat/completions`，**不限 MiniMax**（DeepSeek /
+  Kimi / Ollama / LM Studio 等均可）；MiniMax 仅是出厂默认值。以下为默认
+  端点的实测经验。
 - 用户的 API key 属**国内平台**：`https://api.minimaxi.com/v1` 可用；
-  国际站 `api.minimax.io` 对同 key 返回 401。OpenAI 兼容 `/chat/completions`。
+  国际站 `api.minimax.io` 对同 key 返回 401。
 - **M3 与 M2.x 全系是推理模型**：回复 content 带 `<think>…</think>` 前缀，
   必须剥离（`src/llm.ts` 的 `stripThink`）——不剥会污染正文且 JSON 解析
   错位。M3 生成约 0.5~1 分钟/篇。

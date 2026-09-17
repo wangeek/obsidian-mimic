@@ -20,7 +20,7 @@ Mimic turns this into an Obsidian plugin: pick a few knowledge notes, choose a *
 
 1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](../../releases)
 2. Create `<vault>/.obsidian/plugins/mimic/` and drop the three files in
-3. Obsidian → Settings → Community plugins → enable **Mimic**, then paste a MiniMax API key in the plugin settings
+3. Obsidian → Settings → Community plugins → enable **Mimic**, then paste an API key in the plugin settings — any OpenAI-compatible endpoint works (DeepSeek / Kimi / Ollama / LM Studio…); the built-in defaults are a MiniMax example
 
 ### Option B: Community plugin marketplace (once approved)
 
@@ -49,7 +49,7 @@ Two ways to feed the composer:
 ## Usage
 
 1. Sidebar icon → search and check knowledge notes (or just use the current note)
-2. Pick a recipe, fill the slots, hit **Compose** (~0.5–1 min on MiniMax M3)
+2. Pick a recipe, fill the slots, hit **Compose** (duration depends on the model; ~0.5–1 min on the default M3)
 3. Edit the title, the shell and the link blurbs; **Write note** saves to `拟态/YYYY-MM-DD-<title>.md`
 4. The output carries a `recipe` / `params` / `kp_ids` snapshot and wiki-links back to every source
 
@@ -86,7 +86,7 @@ Mimic 把这件事做成了 Obsidian 插件：挑几篇知识笔记，选一个*
 
 1. 从 [最新 Release](../../releases) 下载三个文件：`main.js`、`manifest.json`、`styles.css`
 2. 建目录 `<vault>/.obsidian/plugins/mimic/`，三个文件放进去
-3. Obsidian → 设置 → 第三方插件 → 启用 **Mimic**，再到插件设置里填 MiniMax API Key
+3. Obsidian → 设置 → 第三方插件 → 启用 **Mimic**，再到插件设置里填 API Key——任意 OpenAI 兼容端点都行（DeepSeek / Kimi / Ollama / LM Studio…），内置默认值是 MiniMax 的示例
 
 ### 方式二：社区插件市场（提交审核通过后）
 
@@ -115,7 +115,7 @@ Obsidian → 设置 → 第三方插件 → 浏览 → 搜 **Mimic** → 安装
 ## 使用
 
 1. 侧边栏图标 → 搜索勾选知识点（或直接用当前笔记）
-2. 选配方、填槽位、点**生成**（MiniMax M3 约 0.5~1 分钟）
+2. 选配方、填槽位、点**生成**（时长视模型而定，默认 M3 约 0.5~1 分钟）
 3. 改标题、改外壳、改关联说明，**写入笔记**，落盘为 `拟态/YYYY-MM-DD-<标题>.md`
 4. 产物 frontmatter 记录 `recipe` / `params` / `kp_ids` 快照，文尾 wiki-link 回链每篇素材
 

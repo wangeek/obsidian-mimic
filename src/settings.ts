@@ -30,6 +30,7 @@ export class MimicSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName(t('settings.api.key'))
 			.addText(tx => tx.setValue(s.apiKey).onChange(async v => { s.apiKey = v.trim(); await this.plugin.saveSettings(); }));
 		new Setting(containerEl).setName(t('settings.api.baseUrl'))
+			.setDesc(t('settings.api.baseUrlDesc'))
 			.addText(tx => tx.setValue(s.baseUrl).onChange(async v => { s.baseUrl = v.trim(); await this.plugin.saveSettings(); }));
 		new Setting(containerEl).setName(t('settings.api.model'))
 			.addText(tx => tx.setValue(s.model).onChange(async v => { s.model = v.trim(); await this.plugin.saveSettings(); }));
