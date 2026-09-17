@@ -1,64 +1,61 @@
 # 🎭 Mimic / 拟态加工
 
-**English** · [中文](#中文) · [Features](#features) · [Install](#install) · [Usage](#usage)
+**English** · [中文](#中文)
 
-> Imitate × Distort: turn your knowledge notes into shareable narratives, without betraying the knowledge.
+> Mimicry works like the Monkey King's seventy-two transformations: the shape may change freely, the body must not. Mimic hands your knowledge notes to an LLM and lets it "transform" them into an article worth reading — the telling is yours to configure, the core definitions must survive word-for-word.
 
-Pick knowledge notes, choose a **recipe** (stage + taboos + prompt slots), and an LLM composes an article whose core segment faithfully mirrors the definitions while the narrative shell carries your chosen spin. Output lands as a linked note in your vault.
-
----
+Configure a **recipe** (which world to tell it in, what is forbidden, which lines to write by), pick the source notes, hit compose. The output lands in your vault as a note that links back to the sources.
 
 ## Features
 
-- **Mimic-distort framework** — a hard fidelity floor (core definitions must survive verbatim or equivalent) plus a bounded distortion layer (no invented facts, recipe taboos respected)
-- **Recipes are pure data** — stage (worldview), taboos (forbidden list), and prompt slots; edit everything in the settings GUI, no code changes, plugin stays agnostic to content
-- **Three slot types** — select / number / text, each with its own prompt template (`{value}` = user input, `{label}` = display name); compose any structure: stance pairs, personas, tone dials…
-- **Three seed recipes** — "产业博弈" (stance-pair structure demo), "西游新传" (Journey-to-the-West stage demo), and "News Desk" (lightweight English demo: news broadcast / talk-show interview / campaign debate); re-import anytime via command (append-only)
-- **Output follows the material's language** — compose from English notes and the article comes out English, from Chinese notes it stays Chinese; the prompt enforces it
-- **Material picker** — fuzzy search (title / chapter / id) with multi-select checkboxes across the whole knowledge base
-- **Two-layer draft** — core segment (knowledge-dense, locked) + narrative shell (editable), plus per-note one-liners for the outgoing wiki-links
-- **Programmatic gatekeeping** — configurable word-count bounds, then human final edit — no LLM judge by design
-- **Bilingual UI** — auto-switches between Chinese and English based on Obsidian's UI language (recipes stay as you wrote them)
-- **Command palette** — `Mimic: compose`, `Import seed recipes`
+- Recipes are plain data — stage, taboos and prompt slots, all edited in the settings GUI, no code
+- Each slot is one line sent to the AI (dropdown / number / text controls with a sentence template each) — any structure is yours to assemble
+- Three seed recipes to learn from: 产业博弈 (two stances), 西游新传 (teaching on the pilgrimage road), News Desk (English)
+- Output is a note network: frontmatter snapshots the recipe, tail wiki-links point back to the source notes; any open note can serve as material, not just the knowledge folder
+- Bilingual UI (zh/en); output language follows the material; word-count bounds are configurable
 
 ## Install
 
-### Option A: Manual (for developers / early users)
+### Option A: Manual
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](../../releases)
-2. Create a folder in your Obsidian vault: `<vault>/.obsidian/plugins/mimic/`
-3. Drop the three files in there
-4. Obsidian → Settings → Community plugins → turn off **Restricted mode** → enable **Mimic**
+1. Download `main.js`, `manifest.json`, `styles.css` from the [latest release](../../releases)
+2. Put them in `<vault>/.obsidian/plugins/mimic/`
+3. Obsidian → Settings → Community plugins → enable **Mimic**
+4. Fill in a MiniMax API key in the plugin settings (endpoint `https://api.minimaxi.com/v1`)
 
-> ⚠️ A MiniMax API key is required (domestic endpoint `https://api.minimaxi.com/v1`); fill it in the plugin settings on first run.
+### Option B: Community plugin marketplace (once approved)
 
-### Option B: Prepare a knowledge base (one-time)
+Settings → Community plugins → Browse → search **Mimic** → Install
 
-The plugin composes from notes with a `kp_id` frontmatter. If you have an existing knowledge base, run the bundled one-shot migration:
+## Preparing a knowledge base (optional, one-time)
+
+Mimic composes notes that carry a `kp_id` frontmatter. If your knowledge lives elsewhere, convert it with the bundled migrate script:
 
 ```powershell
-python migrate/migrate.py --src <knowledge-data-dir> --vault <your-vault>
+python migrate/migrate.py --src <dir containing knowledge.db> --vault <your vault>
 ```
 
-It writes `<vault>/知识点/<chapter>/<kp_id>-<title>.md` notes (definitions and key points as body sections). Re-run after deleting the old `知识点/` folder when the source updates.
+It expects a sqlite file `knowledge.db` with a `knowledge_points` table containing at least:
+
+| Column | Type | Used for |
+|---|---|---|
+| id | INTEGER | note id → filename and wiki-links |
+| title | TEXT | note title |
+| core_definition | TEXT | goes into the `## 核心定义` body section |
+| key_points | TEXT (JSON array) | bullet list section |
+| chapter_no / chapter_title / section | TEXT | chapter folder naming and metadata |
+| related_ids | TEXT (JSON array of ids) | cross-links between notes |
+| equivalent_expressions | TEXT (JSON array) | extra body section |
+| knowledge_type / exam_level / source_id | TEXT / INTEGER | frontmatter metadata |
+
+Output: `知识点/<chapter>/<id>-<title>.md`. To refresh after the source changes, delete the old `知识点/` folder and re-run.
 
 ## Usage
 
-1. Click the 🎭-style sidebar icon (or run **拟态加工** from the command palette)
-2. Search and check the knowledge notes to compose, then **下一步：设置参数**
-3. Pick a recipe, fill the slots (stage and taboos show automatically), click **生成** (~0.5–1 min on MiniMax M3)
-4. Edit the title, narrative shell, and link one-liners; **写入笔记** saves to `拟态/YYYY-MM-DD-<title>.md`
-5. The output note carries a frontmatter snapshot (`recipe` / `params` / `kp_ids`) and a tail of wiki-links back to the source notes
-
-### Recipes at a glance
-
-| Part | Meaning |
-|------|---------|
-| Stage (worldview) | Fictional stage where the mimicry happens, e.g. "Candy Kingdom vs Gear Kingdom"; empty = real-world register |
-| Taboos (forbidden) | Hard boundaries of distortion, e.g. "no fabricated data", joined into the prompt |
-| Slots | Wizard controls + prompt fragments; rendered in order into the 【模仿-扭曲参数】 block |
-
-Example slot: label 模仿姿态 (select), template `以{value}的口吻复述知识`, values 老教授 / 科普作家 / 播客主播.
+1. Click the ❝ sidebar icon (or run **Mimic: compose** from the command palette)
+2. Pick material — search the knowledge folder, or just use the note you are editing
+3. Choose a recipe, adjust slot values, compose (MiniMax M3 takes ~0.5–1 min)
+4. On the review page fix the title, edit the shell, fill link blurbs, then write the note
 
 ## Contact
 
@@ -75,61 +72,64 @@ Example slot: label 模仿姿态 (select), template `以{value}的口吻复述�
 
 [English](#mimic--拟态加工) · **中文**
 
-> 拟态 = 模仿 × 扭曲：把知识笔记加工成可传播的叙述，而不背叛知识本身。
+> 拟态这回事，可以拿孙悟空的七十二变来理解：怎么变都行，本体不能丢。
+> Mimic 做的就是这件事——把知识笔记交给大模型"变"成一篇读得下去的文章：
+> 讲法随你配，核心定义一个字不许错。
 
-选好知识点，挑一份**配方**（舞台 + 禁则 + 提示词槽位），LLM 生成一篇文章——核心段忠实镜像定义，叙事外壳承载你设定的倾向。产物直接落进仓库，连成笔记网络。
+配一张**配方**（在哪个世界讲、什么不许干、按哪几句话写），选好素材，
+点生成，产物落进仓库并回链知识点。适合把复习资料变成愿意读的东西。
 
 ## 特性
 
-- **模仿-扭曲框架**：模仿底线（核心定义原样或等价出现）+ 扭曲边界（不编造事实、遵守配方禁则）
-- **配方是纯数据**：舞台（worldview）、禁则（forbidden）、提示词槽位全部在设置页 GUI 增删改，插件代码对内容齐次无约束
-- **三种槽位**：select / number / text，每个槽位自带 prompt 模板（`{value}` 为用户值，`{label}` 为显示名）；"立场A/B"、"教授口吻"、"强度旋钮"……任何结构都由你组装
-- **内置 3 个示范配方**：产业博弈（双立场结构示范）、西游新传（取经路上讲知识）、News Desk（英文轻量示范：新闻播报 / 访谈 / 竞选辩论）；「导入示范配方」命令随时追加（不覆盖）
-- **产物语言跟随素材**：加工英文笔记出英文文章，加工中文笔记保持中文——由提示词硬规则保证
-- **素材选择器**：标题 / 章节 / 编号模糊搜索，复选多选全库知识点
-- **两层定稿**：核心段（知识密度最高，只读锁定）+ 叙事外壳（可编辑），外加逐条知识点的一句话关联说明
-- **程序化守门**：字数上下限可配 + 人工定稿——设计上不引入 LLM 评估
-- **中英双语**：根据 Obsidian 界面语言自动切换（zh / en）；配方内容保持你写的原样
-- **命令面板**：`拟态加工：知识点 → 拟态笔记`、`导入示范配方（追加，不覆盖）`
+- 配方是纯数据：舞台、禁则、提示词槽位，全在设置页增删改，不用碰代码
+- 槽位就是发给 AI 的一句指令（下拉/数字/文本三种控件，各带一句话模板），任何结构自己拼
+- 自带三个示范配方可参考：产业博弈（双立场）、西游新传（取经路上讲知识）、News Desk（英文）
+- 产物是笔记网络：frontmatter 记录配方快照，文尾 wiki-link 回链素材；正在编辑的任意笔记也能直接当素材
+- 中英双语界面；产物语言跟随素材；字数上下限可配
 
 ## 安装
 
-### 方式一：手动安装（开发者 / 早期用户）
+### 方式一：手动安装
 
-1. 下载 [最新 Release](../../releases) 中的三个文件：`main.js`、`manifest.json`、`styles.css`
-2. 在 Obsidian vault 中创建目录：`<vault>/.obsidian/plugins/mimic/`
-3. 把三个文件放入该目录
-4. Obsidian → 设置 → 第三方插件 → 关闭「受限模式」→ 启用「Mimic」
+1. 下载 [最新 Release](../../releases) 的 `main.js`、`manifest.json`、`styles.css`
+2. 放进 `<vault>/.obsidian/plugins/mimic/`
+3. Obsidian → 设置 → 第三方插件 → 启用 **Mimic**
+4. 在插件设置里填 MiniMax API Key（国内端点 `https://api.minimaxi.com/v1`）
 
-> ⚠️ 需要 MiniMax API Key（国内端点 `https://api.minimaxi.com/v1`），首启在插件设置中填入。
+### 方式二：社区插件市场（审核通过后）
 
-### 方式二：准备知识库（一次性）
+设置 → 第三方插件 → 浏览 → 搜 **Mimic** → 安装
 
-插件加工的是带 `kp_id` frontmatter 的笔记。已有知识库时用随附的一次性迁移工具：
+## 准备知识库（可选，一次性）
+
+Mimic 加工的是带 `kp_id` frontmatter 的笔记。知识库在别处的话，用仓库自带的
+migrate 脚本转成笔记：
 
 ```powershell
-python migrate/migrate.py --src <知识库数据目录> --vault <你的仓库>
+python migrate/migrate.py --src <含 knowledge.db 的目录> --vault <你的仓库>
 ```
 
-产出 `<vault>/知识点/<章>/<kp_id>-<标题>.md`（核心定义与关键要点写在正文小节）。上游更新后删除旧 `知识点/` 目录重跑即可。
+脚本要求一个 sqlite 文件 `knowledge.db`，内含 `knowledge_points` 表，至少要有这些字段：
+
+| 字段 | 类型 | 用途 |
+|---|---|---|
+| id | INTEGER | 知识点编号（主键）→ 文件名与 wiki-link |
+| title | TEXT | 标题 |
+| core_definition | TEXT | 写进正文「核心定义」小节 |
+| key_points | TEXT（JSON 数组） | 「关键要点」小节 |
+| chapter_no / chapter_title / section | TEXT | 章节目录命名与元信息 |
+| related_ids | TEXT（JSON 数组，id 列表） | 笔记间互链 |
+| equivalent_expressions | TEXT（JSON 数组） | 「等价表述」小节 |
+| knowledge_type / exam_level / source_id | TEXT / INTEGER | frontmatter 元信息 |
+
+跑完后 `知识点/<章>/<id>-<标题>.md` 各就各位。上游数据更新时，删掉旧 `知识点/` 目录重跑即可。
 
 ## 使用
 
-1. 点击侧边栏图标（或命令面板执行「拟态加工：知识点 → 拟态笔记」）
-2. 搜索并勾选要加工的知识点 →「下一步：设置参数」
-3. 选配方、填槽位（舞台与禁则自动展示）→「生成」（MiniMax M3 约 0.5~1 分钟）
-4. 编辑标题、叙事外壳与关联说明 →「写入笔记」，落盘为 `拟态/YYYY-MM-DD-<标题>.md`
-5. 产物 frontmatter 记录 `recipe` / `params` / `kp_ids` 快照，文尾 wiki-link 回链知识点
-
-## 配方速览
-
-| 组成 | 含义 |
-|------|------|
-| 舞台（worldview） | 模仿发生的虚构舞台，如"糖果国 vs 齿轮国"；留空即现实语境 |
-| 禁则（forbidden） | 扭曲的硬边界（"不编造数据"…），拼接进 prompt |
-| 槽位（slots） | 向导控件 + prompt 片段，按顺序拼进【模仿-扭曲参数】区 |
-
-槽位示例：显示名「模仿姿态」（select），模板 `以{value}的口吻复述知识`，可选：老教授 / 科普作家 / 播客主播。
+1. 点侧边栏 ❝ 图标（或命令面板运行「拟态加工」）
+2. 选素材——从知识点目录搜，或直接用当前打开的笔记
+3. 选配方、按需改槽位值，点生成（MiniMax M3 约半分钟到一分钟）
+4. 定稿页改标题、编辑外壳、补关联说明，写入笔记
 
 ## 联系作者
 
