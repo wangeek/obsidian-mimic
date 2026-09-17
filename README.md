@@ -2,60 +2,56 @@
 
 **English** · [中文](#中文)
 
-> Mimicry works like the Monkey King's seventy-two transformations: the shape may change freely, the body must not. Mimic hands your knowledge notes to an LLM and lets it "transform" them into an article worth reading — the telling is yours to configure, the core definitions must survive word-for-word.
+Sun Wukong's 72 transformations always leave one thing exposed: his tail. Mimicry works the same way. The *telling* can transform freely — a news broadcast, a brawl on the pilgrimage road, a campaign debate — but the tail, the core definitions, must survive verbatim in the text. Transform the telling, never the knowledge.
 
-Configure a **recipe** (which world to tell it in, what is forbidden, which lines to write by), pick the source notes, hit compose. The output lands in your vault as a note that links back to the sources.
+Mimic turns this into an Obsidian plugin: pick a few knowledge notes, choose a **recipe** (a stage, some taboos, a handful of prompt slots), and an LLM writes the piece — a locked, faithful core segment wrapped in an editable narrative shell that lands back in your vault, linked to its sources.
 
 ## Features
 
-- Recipes are plain data — stage, taboos and prompt slots, all edited in the settings GUI, no code
-- Each slot is one line sent to the AI (dropdown / number / text controls with a sentence template each) — any structure is yours to assemble
-- Three seed recipes to learn from: 产业博弈 (two stances), 西游新传 (teaching on the pilgrimage road), News Desk (English)
-- Output is a note network: frontmatter snapshots the recipe, tail wiki-links point back to the source notes; any open note can serve as material, not just the knowledge folder
-- Bilingual UI (zh/en); output language follows the material; word-count bounds are configurable
+- Recipes are pure data: stage, taboos and slots are edited in the settings GUI, never in code
+- Three slot types (dropdown / number / free text), each with a one-line template like `explain in the voice of {value}` — compose any structure you like
+- Three seed recipes ship in the box: 产业博弈 (a stance duel), 西游新传 (Journey to the West), News Desk (English)
+- Two-layer drafts: the core segment stays locked, the shell is yours to edit, and the tail links every source note
+- UI follows Obsidian's language (zh/en); output follows the material's language
 
 ## Install
 
 ### Option A: Manual
 
-1. Download `main.js`, `manifest.json`, `styles.css` from the [latest release](../../releases)
-2. Put them in `<vault>/.obsidian/plugins/mimic/`
-3. Obsidian → Settings → Community plugins → enable **Mimic**
-4. Fill in a MiniMax API key in the plugin settings (endpoint `https://api.minimaxi.com/v1`)
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](../../releases)
+2. Create `<vault>/.obsidian/plugins/mimic/` and drop the three files in
+3. Obsidian → Settings → Community plugins → enable **Mimic**, then paste a MiniMax API key in the plugin settings
 
 ### Option B: Community plugin marketplace (once approved)
 
-Settings → Community plugins → Browse → search **Mimic** → Install
+Obsidian → Settings → Community plugins → Browse → search **Mimic** → Install
 
-## Preparing a knowledge base (optional, one-time)
+## Preparing material
 
-Mimic composes notes that carry a `kp_id` frontmatter. If your knowledge lives elsewhere, convert it with the bundled migrate script:
+Two ways to feed the composer:
 
-```powershell
-python migrate/migrate.py --src <dir containing knowledge.db> --vault <your vault>
-```
+**A. Run the one-shot migration** if you have a structured knowledge base as SQLite (`migrate/migrate.py --src <dir-with-knowledge.db> --vault <vault>`). It expects a `knowledge_points` table:
 
-It expects a sqlite file `knowledge.db` with a `knowledge_points` table containing at least:
-
-| Column | Type | Used for |
+| Column | Type | Meaning |
 |---|---|---|
-| id | INTEGER | note id → filename and wiki-links |
-| title | TEXT | note title |
-| core_definition | TEXT | goes into the `## 核心定义` body section |
-| key_points | TEXT (JSON array) | bullet list section |
-| chapter_no / chapter_title / section | TEXT | chapter folder naming and metadata |
-| related_ids | TEXT (JSON array of ids) | cross-links between notes |
-| equivalent_expressions | TEXT (JSON array) | extra body section |
-| knowledge_type / exam_level / source_id | TEXT / INTEGER | frontmatter metadata |
+| `id` | int | unique note id, becomes `kp_id` and the file name prefix |
+| `title` | text | note title |
+| `chapter_no` / `chapter_title` | text/int | chapter folder |
+| `section` | text | section label |
+| `core_definition` | text | the definition; written as a `## 核心定义` body section |
+| `key_points` | text (JSON array) | bullets under `## 关键要点` |
+| `related_ids` | text (JSON array) | ids to link; emitted as wiki-links |
+| `equivalent_expressions` | text (JSON array) | rewordings, optional |
+| `exam_level`, `knowledge_type`, `source_id` | — | metadata carried into frontmatter |
 
-Output: `知识点/<chapter>/<id>-<title>.md`. To refresh after the source changes, delete the old `知识点/` folder and re-run.
+**B. Skip the script entirely.** Any note with a `kp_id` frontmatter is picked up from the knowledge folder — hand-write them if you like. And the command *Mimic: compose current note* takes whatever you are editing as material, no folder or frontmatter required.
 
 ## Usage
 
-1. Click the ❝ sidebar icon (or run **Mimic: compose** from the command palette)
-2. Pick material — search the knowledge folder, or just use the note you are editing
-3. Choose a recipe, adjust slot values, compose (MiniMax M3 takes ~0.5–1 min)
-4. On the review page fix the title, edit the shell, fill link blurbs, then write the note
+1. Sidebar icon → search and check knowledge notes (or just use the current note)
+2. Pick a recipe, fill the slots, hit **Compose** (~0.5–1 min on MiniMax M3)
+3. Edit the title, the shell and the link blurbs; **Write note** saves to `拟态/YYYY-MM-DD-<title>.md`
+4. The output carries a `recipe` / `params` / `kp_ids` snapshot and wiki-links back to every source
 
 ## Contact
 
@@ -72,64 +68,56 @@ Output: `知识点/<chapter>/<id>-<title>.md`. To refresh after the source chang
 
 [English](#mimic--拟态加工) · **中文**
 
-> 拟态这回事，可以拿孙悟空的七十二变来理解：怎么变都行，本体不能丢。
-> Mimic 做的就是这件事——把知识笔记交给大模型"变"成一篇读得下去的文章：
-> 讲法随你配，核心定义一个字不许错。
+孙悟空七十二变，变什么都有条藏不住的尾巴。拟态也是这个理：**讲法**可以随便变——新闻播报、取经路上师徒斗嘴、竞选辩论——但知识的"尾巴"（核心定义）必须原样留在文中。变的是说法，不变的是知识。
 
-配一张**配方**（在哪个世界讲、什么不许干、按哪几句话写），选好素材，
-点生成，产物落进仓库并回链知识点。适合把复习资料变成愿意读的东西。
+Mimic 把这件事做成了 Obsidian 插件：挑几篇知识笔记，选一个**配方**（一个舞台、几条禁则、一把提示词槽位），LLM 写出一篇文章——核心段忠实镜像定义且锁定，叙事外壳随你口味变形、可编辑，产物落回仓库并回链素材。
 
 ## 特性
 
-- 配方是纯数据：舞台、禁则、提示词槽位，全在设置页增删改，不用碰代码
-- 槽位就是发给 AI 的一句指令（下拉/数字/文本三种控件，各带一句话模板），任何结构自己拼
-- 自带三个示范配方可参考：产业博弈（双立场）、西游新传（取经路上讲知识）、News Desk（英文）
-- 产物是笔记网络：frontmatter 记录配方快照，文尾 wiki-link 回链素材；正在编辑的任意笔记也能直接当素材
-- 中英双语界面；产物语言跟随素材；字数上下限可配
+- 配方即数据：舞台、禁则、槽位全在设置页增删改，不用碰代码
+- 三种槽位（下拉 / 数字 / 自由文本），每个槽位一句话模板，如 `以{value}的口吻复述知识`——任意结构随你组装
+- 内置三个示范配方：产业博弈（双立场对垒）、西游新传（取经路上讲知识）、News Desk（英文）
+- 产物分两层：核心段锁定、外壳可编辑，文尾自动回链每篇素材
+- 界面随 Obsidian 语言（中/英）；产物语言随素材语言
 
 ## 安装
 
 ### 方式一：手动安装
 
-1. 下载 [最新 Release](../../releases) 的 `main.js`、`manifest.json`、`styles.css`
-2. 放进 `<vault>/.obsidian/plugins/mimic/`
-3. Obsidian → 设置 → 第三方插件 → 启用 **Mimic**
-4. 在插件设置里填 MiniMax API Key（国内端点 `https://api.minimaxi.com/v1`）
+1. 从 [最新 Release](../../releases) 下载三个文件：`main.js`、`manifest.json`、`styles.css`
+2. 建目录 `<vault>/.obsidian/plugins/mimic/`，三个文件放进去
+3. Obsidian → 设置 → 第三方插件 → 启用 **Mimic**，再到插件设置里填 MiniMax API Key
 
-### 方式二：社区插件市场（审核通过后）
+### 方式二：社区插件市场（提交审核通过后）
 
-设置 → 第三方插件 → 浏览 → 搜 **Mimic** → 安装
+Obsidian → 设置 → 第三方插件 → 浏览 → 搜 **Mimic** → 安装
 
-## 准备知识库（可选，一次性）
+## 准备素材
 
-Mimic 加工的是带 `kp_id` frontmatter 的笔记。知识库在别处的话，用仓库自带的
-migrate 脚本转成笔记：
+喂给插件的路子有两条：
 
-```powershell
-python migrate/migrate.py --src <含 knowledge.db 的目录> --vault <你的仓库>
-```
+**A. 跑一次性迁移**——已有结构化知识库（SQLite）时用 `migrate/migrate.py --src <含knowledge.db的目录> --vault <仓库>`。脚本要求库里有一张 `knowledge_points` 表：
 
-脚本要求一个 sqlite 文件 `knowledge.db`，内含 `knowledge_points` 表，至少要有这些字段：
-
-| 字段 | 类型 | 用途 |
+| 字段 | 类型 | 含义 |
 |---|---|---|
-| id | INTEGER | 知识点编号（主键）→ 文件名与 wiki-link |
-| title | TEXT | 标题 |
-| core_definition | TEXT | 写进正文「核心定义」小节 |
-| key_points | TEXT（JSON 数组） | 「关键要点」小节 |
-| chapter_no / chapter_title / section | TEXT | 章节目录命名与元信息 |
-| related_ids | TEXT（JSON 数组，id 列表） | 笔记间互链 |
-| equivalent_expressions | TEXT（JSON 数组） | 「等价表述」小节 |
-| knowledge_type / exam_level / source_id | TEXT / INTEGER | frontmatter 元信息 |
+| `id` | int | 知识点编号（唯一），成为 `kp_id` 与文件名前缀 |
+| `title` | text | 标题 |
+| `chapter_no` / `chapter_title` | text/int | 章目录 |
+| `section` | text | 节名 |
+| `core_definition` | text | 核心定义，写进正文 `## 核心定义` 小节 |
+| `key_points` | text（JSON 数组） | `## 关键要点` 下的条目 |
+| `related_ids` | text（JSON 数组） | 关联知识点 id，生成 wiki-link |
+| `equivalent_expressions` | text（JSON 数组） | 等价表述，可空 |
+| `exam_level`、`knowledge_type`、`source_id` | — | 元数据，进 frontmatter |
 
-跑完后 `知识点/<章>/<id>-<标题>.md` 各就各位。上游数据更新时，删掉旧 `知识点/` 目录重跑即可。
+**B. 不跑脚本也行。** 知识点目录里任何带 `kp_id` frontmatter 的笔记都会被识别，手写也可以；另外「拟态加工：加工当前笔记」命令直接拿正在编辑的任何笔记当素材，不看目录、不看 frontmatter。
 
 ## 使用
 
-1. 点侧边栏 ❝ 图标（或命令面板运行「拟态加工」）
-2. 选素材——从知识点目录搜，或直接用当前打开的笔记
-3. 选配方、按需改槽位值，点生成（MiniMax M3 约半分钟到一分钟）
-4. 定稿页改标题、编辑外壳、补关联说明，写入笔记
+1. 侧边栏图标 → 搜索勾选知识点（或直接用当前笔记）
+2. 选配方、填槽位、点**生成**（MiniMax M3 约 0.5~1 分钟）
+3. 改标题、改外壳、改关联说明，**写入笔记**，落盘为 `拟态/YYYY-MM-DD-<标题>.md`
+4. 产物 frontmatter 记录 `recipe` / `params` / `kp_ids` 快照，文尾 wiki-link 回链每篇素材
 
 ## 联系作者
 
