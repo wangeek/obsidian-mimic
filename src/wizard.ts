@@ -7,6 +7,14 @@ import { chat, parseJsonLoose } from './llm';
 import { writeComposedNote } from './render';
 import { t } from './i18n';
 
+/** 全文长度：中文按字计、英文按词计（混合文本加总）——与 prompt 字数要求同一语义 */
+function countWords(text: string): number {
+	const cjk = (text.match(/[\u4e00-\u9fff]/g) ?? []).length;
+	const rest = text.replace(/[\u4e00-\u9fff]/g, ' ');
+	const latinWords = (rest.match(/[A-Za-z0-9][A-Za-z0-9'-]*/g) ?? []).length;
+	return cjk + latinWords;
+}
+
 export class ComposeWizard extends Modal {
 	private plugin: MimicPlugin;
 	private kps: KpNote[];
@@ -142,6 +150,8 @@ export class ComposeWizard extends Modal {
 			points,
 			relatedTitles: this.kps.map(k => k.title).join('、'),
 			forbidden: r.forbidden.join('；') || '不得编造事实与数据',
+			minWords: st.minWords,
+			maxWords: st.maxWords,
 		});
 
 		this.renderGenerating();
@@ -222,7 +232,7 @@ export class ComposeWizard extends Modal {
 	private validate(): string | null {
 		const st = this.plugin.settings;
 		const r = this.result!;
-		const words = (r.coreSegment + r.narrativeShell).replace(/\s/g, '').length;
+		const words = countWords(r.coreSegment + r.narrativeShell);
 		if (words < st.minWords) return t('wizard.validate.under', { words, min: st.minWords });
 		if (words > st.maxWords) return t('wizard.validate.over', { words, max: st.maxWords });
 		return null;
