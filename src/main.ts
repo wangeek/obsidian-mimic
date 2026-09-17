@@ -1,5 +1,5 @@
 /** Mimic 主入口：ribbon/命令/文件右键菜单注册、素材构造、种子导入 */
-import { Menu, Notice, Plugin, TFile } from 'obsidian';
+import { Menu, Notice, Plugin, TAbstractFile, TFile } from 'obsidian';
 import { DEFAULT_SETTINGS, SEED_RECIPES, type KpNote, type MimicSettings } from './types';
 import { ComposeWizard } from './wizard';
 import { MimicSettingTab } from './settings';
@@ -25,17 +25,22 @@ export default class MimicPlugin extends Plugin {
 		});
 		this.addSettingTab(new MimicSettingTab(this.app, this));
 
-		// 文件浏览器右键：单文件 = 加工此笔记；多选 = 对选中的 N 个文件加工
+		// 文件浏览器右键：单选 = 加工此笔记（file-menu）；
+		// 多选 = 对选中的 N 个文件加工（files-menu，官方事件直接携带选择集）
 		this.registerEvent(this.app.workspace.on('file-menu', (menu: Menu, file) => {
 			if (!(file instanceof TFile) || file.extension !== 'md') return;
-			const picked = this.getSelectedExplorerFiles();
-			const targets = picked.length > 1 ? picked : [file];
 			menu.addItem(item => item
-				.setTitle(targets.length > 1
-					? t('main.menu.composeMany', { count: targets.length })
-					: t('main.menu.composeOne'))
+				.setTitle(t('main.menu.composeOne'))
 				.setIcon('quote-glyph')
-				.onClick(() => { this.composeFiles(targets); }));
+				.onClick(() => { this.composeFiles([file]); }));
+		}));
+		this.registerEvent(this.app.workspace.on('files-menu', (menu: Menu, files: TAbstractFile[]) => {
+			const tfiles = files.filter((f): f is TFile => f instanceof TFile && f.extension === 'md');
+			if (!tfiles.length) return;
+			menu.addItem(item => item
+				.setTitle(t('main.menu.composeMany', { count: tfiles.length }))
+				.setIcon('quote-glyph')
+				.onClick(() => { this.composeFiles(tfiles); }));
 		}));
 	}
 
@@ -54,23 +59,6 @@ export default class MimicPlugin extends Plugin {
 		const kps = files.map(f => this.buildKpFromFile(f)).filter((k): k is KpNote => k !== null);
 		if (!kps.length) return;
 		new ComposeWizard(this.app, this, kps).open();
-	}
-
-	/** 文件浏览器的多选集合（selectedDoms 为非公开 API；取不到则降级为右键的单个文件） */
-	private getSelectedExplorerFiles(): TFile[] {
-		try {
-			const leaf = this.app.workspace.getLeavesOfType('file-explorer')[0];
-			const view = leaf?.view as { selectedDoms?: { length: number; [i: number]: { file?: TFile } } } | undefined;
-			const doms = view?.selectedDoms;
-			const out: TFile[] = [];
-			for (let i = 0; doms && i < doms.length; i++) {
-				const fi = doms[i].file;
-				if (fi instanceof TFile) out.push(fi);
-			}
-			return out;
-		} catch {
-			return [];
-		}
 	}
 
 	/** 任意笔记 → 素材项：带 kp_id 的按知识点处理，否则作为库外笔记（external） */
