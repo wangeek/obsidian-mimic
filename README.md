@@ -2,9 +2,9 @@
 
 **English** · [中文](#中文)
 
-Sun Wukong's 72 transformations always leave one thing exposed: his tail. Mimicry works the same way. The *telling* can transform freely — a news broadcast, a brawl on the pilgrimage road, a campaign debate — but the tail, the core definitions, must survive verbatim in the text. Transform the telling, never the knowledge.
+Media select, process, and recombine information before presenting it to you — that filtered environment is what Lippmann called the *pseudo-environment*, much like a beauty filter on a livestream.
 
-Mimic turns this into an Obsidian plugin: right-click a note (or multi-select notes in the file browser), choose a **recipe** (a stage, some taboos, a handful of prompt slots), and an LLM writes the piece — a locked, faithful core segment wrapped in an editable narrative shell that lands back in your vault, linked to its sources.
+This plugin lets you set up templates in that spirit — news broadcast, talk-show interview, campaign debate, classic-story retelling — and runs your notes through LLM-powered mimicry, deepening your memory of the original material. How to use: right-click a note in the left sidebar (or multi-select a few in the file list), pick a **recipe** (a stage, a few taboos, a handful of prompt slots), and an LLM writes a piece — the core segment mirrors the definitions faithfully and stays locked, the narrative shell bends to your taste and stays editable, and the result is written into the vault with links back to the source notes. You can also click the ❝ icon in the left ribbon to compose the note you are currently editing.
 
 ## Features
 
@@ -68,9 +68,9 @@ Two ways to feed the composer:
 
 [English](#mimic--拟态加工) · **中文**
 
-孙悟空七十二变，变什么都有条藏不住的尾巴。拟态也是这个理：**讲法**可以随便变——新闻播报、取经路上师徒斗嘴、竞选辩论——但知识的"尾巴"（核心定义）必须原样留在文中。变的是说法，不变的是知识。
+媒体对信息进行选择、加工和重组，再呈现给你——这个被"加工过"的环境就是拟态环境，就像直播间的美颜滤镜。
 
-Mimic 把这件事做成了 Obsidian 插件：右键一篇笔记（或在文件列表里多选几篇），选一个**配方**（一个舞台、几条禁则、几个提示词槽位），LLM 写出一篇文章——核心段忠实镜像定义且锁定，叙事外壳随你口味变形、可编辑，产物落回仓库并回链素材。
+这个插件可以设定新闻、访谈、辩论、经典故事等一系列模板，通过 LLM，对你的笔记进行拟态加工，加深你对原笔记知识点的记忆。操作方法：Obsidian 左边栏中右键点击一篇笔记（或在文件列表里多选几篇），选一个**配方**（一个舞台、几条禁则、几个提示词槽位），LLM 写出一篇文章——核心段忠实镜像定义且锁定，叙事外壳随你口味变形、可编辑，产物写入仓库，并反向关联原素材。点击左侧栏的 ❝ 图标，也可以对当前打开的笔记进行加工。
 
 ## 特性
 
