@@ -61,7 +61,7 @@ export class ComposeWizard extends Modal {
 
 		const recipes = this.plugin.settings.recipes;
 		new Setting(contentEl).setName(t('wizard.recipe')).addDropdown(dd => {
-			recipes.forEach((r, i) => dd.addOption(String(i), r.name));
+			recipes.forEach((r, i) => { dd.addOption(String(i), r.name); });
 			dd.setValue(String(this.recipeIdx)).onChange(v => {
 				this.recipeIdx = parseInt(v, 10);
 				this.resetSlotDefaults(this.recipeIdx);
@@ -79,7 +79,7 @@ export class ComposeWizard extends Modal {
 			const set = new Setting(contentEl).setName(s.label);
 			if (s.type === 'select') {
 				set.addDropdown(dd => {
-					(s.values ?? []).forEach(v => dd.addOption(v, v));
+					(s.values ?? []).forEach(v => { dd.addOption(v, v); });
 					dd.setValue(this.slotValues[s.id] ?? '').onChange(v => { this.slotValues[s.id] = v; });
 				});
 			} else if (s.type === 'number') {

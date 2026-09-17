@@ -215,7 +215,7 @@ export const ZH: Record<TranslationKey, string> = {
 export type Locale = 'zh' | 'en';
 
 const DICTS: Record<Locale, Record<TranslationKey, string>> = {
-	en: EN as Record<TranslationKey, string>,
+	en: EN,
 	zh: ZH,
 };
 

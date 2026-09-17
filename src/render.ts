@@ -19,7 +19,7 @@ function ymd(): string {
 }
 
 function safeName(s: string): string {
-	return s.replace(/[\\/:*?"<>|#^\[\]]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
+	return s.replace(/[\\/:*?"<>|#^[\]]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60);
 }
 
 function fmValue(v: unknown): string {

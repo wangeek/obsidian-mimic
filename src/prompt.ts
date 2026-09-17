@@ -5,7 +5,7 @@
  * 【模仿-扭曲参数】区由配方槽位渲染：每个槽位一条 prompt 片段。
  * 输出严格 JSON：{title, core_segment, narrative_shell}。
  */
-import type { MimicRecipe, RecipeSlot } from './types';
+import type { RecipeSlot } from './types';
 
 const GENERATE_SYSTEM = `你是拟态内容引擎：以"模仿"（忠实镜像知识定义）为基础，按"扭曲"参数做受控变形，把知识素材加工成一篇可传播的文章。
 硬性规则：

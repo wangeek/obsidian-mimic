@@ -56,7 +56,7 @@ function strictParse(json: string): Record<string, unknown> {
 	}
 }
 
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise(r => window.setTimeout(r, ms));
 
 /** 一次 chat 调用（含剥 think） */
 export async function chat(
@@ -85,9 +85,11 @@ export async function chat(
 			});
 			if (res.status >= 500) { lastErr = `HTTP ${res.status}`; continue; }
 			if (res.status !== 200) {
-				throw new Error(`HTTP ${res.status}: ${JSON.stringify(res.json?.error ?? '')}`);
+				const data = res.json as { error?: unknown } | undefined;
+				throw new Error(`HTTP ${res.status}: ${JSON.stringify(data?.error ?? '')}`);
 			}
-			const content = res.json?.choices?.[0]?.message?.content;
+			const data = res.json as { choices?: Array<{ message?: { content?: unknown } }> } | undefined;
+			const content = data?.choices?.[0]?.message?.content;
 			if (typeof content !== 'string') throw new Error(t('llm.noContent'));
 			return stripThink(content);
 		} catch (e) {

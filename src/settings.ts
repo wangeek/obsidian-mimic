@@ -1,5 +1,5 @@
 /** 设置页三块：API / 配方管理（GUI CRUD，含槽位编辑）/ 使用说明 */
-import { App, Modal, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { App, Modal, Notice, PluginSettingTab, Setting, SettingDefinitionItem } from 'obsidian';
 import type MimicPlugin from './main';
 import type { MimicRecipe, RecipeSlot } from './types';
 import { t } from './i18n';
@@ -20,11 +20,17 @@ export class MimicSettingTab extends PluginSettingTab {
 		this.renderGuide();
 	}
 
+	/** 声明式设置（1.13.0+ 设置搜索）：配方页是动态 CRUD + 富文本指南，
+	 * 无法静态声明；返回空数组以保持 display() 渲染路径（非空会跳过 display）。 */
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		return [];
+	}
+
 	// ---------- ① API ----------
 
 	private renderApi() {
 		const { containerEl } = this;
-		containerEl.createEl('h2', { text: t('settings.api.heading') });
+		new Setting(containerEl).setName(t('settings.api.heading')).setHeading();
 		const s = this.plugin.settings;
 
 		new Setting(containerEl).setName(t('settings.api.key'))
@@ -48,7 +54,7 @@ export class MimicSettingTab extends PluginSettingTab {
 
 	private renderRecipes() {
 		const { containerEl } = this;
-		containerEl.createEl('h2', { text: t('settings.recipes.heading') });
+		new Setting(containerEl).setName(t('settings.recipes.heading')).setHeading();
 		const s = this.plugin.settings;
 
 		s.recipes.forEach((r, i) => {
@@ -90,7 +96,15 @@ export class MimicSettingTab extends PluginSettingTab {
 	private renderGuide() {
 		const el = this.containerEl.createEl('details');
 		el.createEl('summary', { text: t('settings.guide.summary') });
-		el.createDiv().innerHTML = t('settings.guide.html');
+		// 内容是插件自有 i18n 常量；经 DOMParser 导入节点以避免 innerHTML 赋值
+		const imported = document.importNode(
+			new DOMParser().parseFromString(t('settings.guide.html'), 'text/html').body,
+			true,
+		);
+		const body = el.createDiv();
+		while (imported.firstChild) {
+			body.appendChild(imported.firstChild);
+		}
 	}
 }
 

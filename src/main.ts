@@ -64,7 +64,7 @@ export default class MimicPlugin extends Plugin {
 	/** 任意笔记 → 素材项：带 kp_id 的按知识点处理，否则作为库外笔记（external） */
 	buildKpFromFile(f: TFile | null): KpNote | null {
 		if (!f || f.extension !== 'md') return null;
-		const fm = this.app.metadataCache.getFileCache(f)?.frontmatter;
+		const fm: Record<string, unknown> | undefined = this.app.metadataCache.getFileCache(f)?.frontmatter;
 		const kpId = parseInt(String(fm?.kp_id ?? ''), 10);
 		const known = Number.isFinite(kpId);
 		return {
