@@ -34,8 +34,6 @@ export class MimicSettingTab extends PluginSettingTab {
 			.addText(tx => tx.setValue(s.baseUrl).onChange(async v => { s.baseUrl = v.trim(); await this.plugin.saveSettings(); }));
 		new Setting(containerEl).setName(t('settings.api.model'))
 			.addText(tx => tx.setValue(s.model).onChange(async v => { s.model = v.trim(); await this.plugin.saveSettings(); }));
-		new Setting(containerEl).setName(t('settings.api.knowledgeDir'))
-			.addText(tx => tx.setValue(s.knowledgeDir).onChange(async v => { s.knowledgeDir = v.trim(); await this.plugin.saveSettings(); }));
 		new Setting(containerEl).setName(t('settings.api.outputDir'))
 			.addText(tx => tx.setValue(s.outputDir).onChange(async v => { s.outputDir = v.trim(); await this.plugin.saveSettings(); }));
 		new Setting(containerEl).setName(t('settings.api.minWords')).addText(tx => tx

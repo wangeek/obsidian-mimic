@@ -1,7 +1,6 @@
-/** Mimic 主入口：ribbon / 命令注册、知识点索引、种子导入 */
-import { Notice, Plugin, TFile } from 'obsidian';
+/** Mimic 主入口：ribbon/命令/文件右键菜单注册、素材构造、种子导入 */
+import { Menu, Notice, Plugin, TFile } from 'obsidian';
 import { DEFAULT_SETTINGS, SEED_RECIPES, type KpNote, type MimicSettings } from './types';
-import { KpPickerModal } from './picker';
 import { ComposeWizard } from './wizard';
 import { MimicSettingTab } from './settings';
 import { initLocale, t } from './i18n';
@@ -13,23 +12,11 @@ export default class MimicPlugin extends Plugin {
 		await this.loadSettings();
 		initLocale();
 
-		this.addRibbonIcon('quote-glyph', t('main.ribbon.tooltip'), () => { void this.startCompose(); });
-		this.addCommand({
-			id: 'compose',
-			name: t('main.command.compose'),
-			callback: () => { void this.startCompose(); },
-		});
+		this.addRibbonIcon('quote-glyph', t('main.ribbon.tooltip'), () => { this.composeActive(); });
 		this.addCommand({
 			id: 'compose-current',
 			name: t('main.command.composeCurrent'),
-			callback: () => {
-				const kp = this.buildKpFromFile(this.app.workspace.getActiveFile());
-				if (!kp) {
-					new Notice(t('main.notice.noActiveNote'));
-					return;
-				}
-				void this.startCompose([kp]);
-			},
+			callback: () => { this.composeActive(); },
 		});
 		this.addCommand({
 			id: 'import-seed-recipes',
@@ -37,29 +24,56 @@ export default class MimicPlugin extends Plugin {
 			callback: () => { void this.importSeedRecipes(); },
 		});
 		this.addSettingTab(new MimicSettingTab(this.app, this));
+
+		// 文件浏览器右键：单文件 = 加工此笔记；多选 = 对选中的 N 个文件加工
+		this.registerEvent(this.app.workspace.on('file-menu', (menu: Menu, file) => {
+			if (!(file instanceof TFile) || file.extension !== 'md') return;
+			const picked = this.getSelectedExplorerFiles();
+			const targets = picked.length > 1 ? picked : [file];
+			menu.addItem(item => item
+				.setTitle(targets.length > 1
+					? t('main.menu.composeMany', { count: targets.length })
+					: t('main.menu.composeOne'))
+				.setIcon('quote-glyph')
+				.onClick(() => { this.composeFiles(targets); }));
+		}));
 	}
 
-	/** 入口：preset 传入了素材（如"加工当前笔记"）则跳过选择器，否则从目录勾选 */
-	private async startCompose(preset?: KpNote[]) {
-		if (!this.settings.recipes.length) {
-			new Notice(t('main.notice.noRecipes'));
+	/** 入口一：加工当前打开的笔记 */
+	private composeActive() {
+		const kp = this.buildKpFromFile(this.app.workspace.getActiveFile());
+		if (!kp) {
+			new Notice(t('main.notice.noActiveNote'));
 			return;
 		}
-		let kps = preset;
-		if (!kps?.length) {
-			const notes = this.indexKnowledge();
-			if (!notes.length) {
-				new Notice(t('main.notice.noKnowledge', { dir: this.settings.knowledgeDir }));
-				return;
-			}
-			const current = this.buildKpFromFile(this.app.workspace.getActiveFile());
-			kps = await new KpPickerModal(this.app, notes, current).openAndWait();
-			if (!kps.length) return;
-		}
+		new ComposeWizard(this.app, this, [kp]).open();
+	}
+
+	/** 入口二：加工右键选中的一批文件 */
+	private composeFiles(files: TFile[]) {
+		const kps = files.map(f => this.buildKpFromFile(f)).filter((k): k is KpNote => k !== null);
+		if (!kps.length) return;
 		new ComposeWizard(this.app, this, kps).open();
 	}
 
-	/** 任意打开的笔记 → 素材项：带 kp_id 的按知识点处理，否则作为库外笔记（external） */
+	/** 文件浏览器的多选集合（selectedDoms 为非公开 API；取不到则降级为右键的单个文件） */
+	private getSelectedExplorerFiles(): TFile[] {
+		try {
+			const leaf = this.app.workspace.getLeavesOfType('file-explorer')[0];
+			const view = leaf?.view as { selectedDoms?: { length: number; [i: number]: { file?: TFile } } } | undefined;
+			const doms = view?.selectedDoms;
+			const out: TFile[] = [];
+			for (let i = 0; doms && i < doms.length; i++) {
+				const fi = doms[i].file;
+				if (fi instanceof TFile) out.push(fi);
+			}
+			return out;
+		} catch {
+			return [];
+		}
+	}
+
+	/** 任意笔记 → 素材项：带 kp_id 的按知识点处理，否则作为库外笔记（external） */
 	buildKpFromFile(f: TFile | null): KpNote | null {
 		if (!f || f.extension !== 'md') return null;
 		const fm = this.app.metadataCache.getFileCache(f)?.frontmatter;
@@ -75,29 +89,6 @@ export default class MimicPlugin extends Plugin {
 			definition: String(fm?.core_definition ?? ''),
 			external: !known,
 		};
-	}
-
-	/** 扫描知识点目录的 frontmatter 建索引 */
-	indexKnowledge(): KpNote[] {
-		const folder = this.settings.knowledgeDir.replace(/\/$/, '');
-		const out: KpNote[] = [];
-		for (const f of this.app.vault.getMarkdownFiles()) {
-			if (!f.path.startsWith(folder + '/')) continue;
-			const fm = this.app.metadataCache.getFileCache(f)?.frontmatter;
-			const kpId = parseInt(String(fm?.kp_id ?? ''), 10);
-			if (!Number.isFinite(kpId)) continue;
-			out.push({
-				kpId,
-				title: String(fm?.title ?? f.basename),
-				chapter: String(fm?.chapter ?? ''),
-				chapterTitle: String(fm?.chapter_title ?? ''),
-				section: String(fm?.section ?? ''),
-				path: f.path,
-				definition: String(fm?.core_definition ?? ''),
-			});
-		}
-		out.sort((a, b) => a.kpId - b.kpId);
-		return out;
 	}
 
 	/** 读取知识点笔记全文（prompt 素材兜底） */

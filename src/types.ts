@@ -56,7 +56,6 @@ export interface MimicSettings {
 	apiKey: string;
 	baseUrl: string;
 	model: string;
-	knowledgeDir: string;
 	outputDir: string;
 	minWords: number;
 	maxWords: number;
@@ -67,7 +66,6 @@ export const DEFAULT_SETTINGS: MimicSettings = {
 	apiKey: '',
 	baseUrl: 'https://api.minimaxi.com/v1',
 	model: 'MiniMax-M3',
-	knowledgeDir: '知识点',
 	outputDir: '拟态',
 	minWords: 300,
 	maxWords: 800,

@@ -4,7 +4,7 @@
 
 Sun Wukong's 72 transformations always leave one thing exposed: his tail. Mimicry works the same way. The *telling* can transform freely — a news broadcast, a brawl on the pilgrimage road, a campaign debate — but the tail, the core definitions, must survive verbatim in the text. Transform the telling, never the knowledge.
 
-Mimic turns this into an Obsidian plugin: pick a few knowledge notes, choose a **recipe** (a stage, some taboos, a handful of prompt slots), and an LLM writes the piece — a locked, faithful core segment wrapped in an editable narrative shell that lands back in your vault, linked to its sources.
+Mimic turns this into an Obsidian plugin: right-click a note (or multi-select notes in the file browser), choose a **recipe** (a stage, some taboos, a handful of prompt slots), and an LLM writes the piece — a locked, faithful core segment wrapped in an editable narrative shell that lands back in your vault, linked to its sources.
 
 ## Features
 
@@ -44,11 +44,11 @@ Two ways to feed the composer:
 | `equivalent_expressions` | text (JSON array) | rewordings, optional |
 | `exam_level`, `knowledge_type`, `source_id` | — | metadata carried into frontmatter |
 
-**B. Skip the script entirely.** Any note with a `kp_id` frontmatter is picked up from the knowledge folder — hand-write them if you like. And the command *Mimic: compose current note* takes whatever you are editing as material, no folder or frontmatter required.
+**B. Skip the script entirely.** Notes with a `kp_id` frontmatter are treated as knowledge notes (used for the file-name wiki-links and the `kp_ids` record); hand-write them if you like. Everything else composes fine too — the plugin takes whatever files you select, no folder or frontmatter required.
 
 ## Usage
 
-1. Sidebar icon → search and check knowledge notes (or just use the current note)
+1. Right-click any note → **Mimic: compose this note**; or multi-select notes in the file browser → **Mimic: compose N selected notes**; or click the sidebar icon / command to compose the note you are editing
 2. Pick a recipe, fill the slots, hit **Compose** (duration depends on the model; ~0.5–1 min on the default M3)
 3. Edit the title, the shell and the link blurbs; **Write note** saves to `拟态/YYYY-MM-DD-<title>.md`
 4. The output carries a `recipe` / `params` / `kp_ids` snapshot and wiki-links back to every source
@@ -70,7 +70,7 @@ Two ways to feed the composer:
 
 孙悟空七十二变，变什么都有条藏不住的尾巴。拟态也是这个理：**讲法**可以随便变——新闻播报、取经路上师徒斗嘴、竞选辩论——但知识的"尾巴"（核心定义）必须原样留在文中。变的是说法，不变的是知识。
 
-Mimic 把这件事做成了 Obsidian 插件：挑几篇知识笔记，选一个**配方**（一个舞台、几条禁则、一把提示词槽位），LLM 写出一篇文章——核心段忠实镜像定义且锁定，叙事外壳随你口味变形、可编辑，产物落回仓库并回链素材。
+Mimic 把这件事做成了 Obsidian 插件：右键一篇笔记（或在文件列表里多选几篇），选一个**配方**（一个舞台、几条禁则、一把提示词槽位），LLM 写出一篇文章——核心段忠实镜像定义且锁定，叙事外壳随你口味变形、可编辑，产物落回仓库并回链素材。
 
 ## 特性
 
@@ -110,11 +110,11 @@ Obsidian → 设置 → 第三方插件 → 浏览 → 搜 **Mimic** → 安装
 | `equivalent_expressions` | text（JSON 数组） | 等价表述，可空 |
 | `exam_level`、`knowledge_type`、`source_id` | — | 元数据，进 frontmatter |
 
-**B. 不跑脚本也行。** 知识点目录里任何带 `kp_id` frontmatter 的笔记都会被识别，手写也可以；另外「拟态加工：加工当前笔记」命令直接拿正在编辑的任何笔记当素材，不看目录、不看 frontmatter。
+**B. 不跑脚本也行。** 带 `kp_id` frontmatter 的笔记被视为知识点（用于文件名 wiki-link 与产物 `kp_ids` 记录），手写也可以；其余任何笔记照常加工——插件拿你选中的文件当素材，不看目录、不限 frontmatter。
 
 ## 使用
 
-1. 侧边栏图标 → 搜索勾选知识点（或直接用当前笔记）
+1. 右键任意笔记 →「拟态加工：加工此笔记」；或在文件列表多选几篇 →「对选中的 N 个文件加工」；也可以点侧边栏图标 / 命令面板，加工正在编辑的这篇
 2. 选配方、填槽位、点**生成**（时长视模型而定，默认 M3 约 0.5~1 分钟）
 3. 改标题、改外壳、改关联说明，**写入笔记**，落盘为 `拟态/YYYY-MM-DD-<标题>.md`
 4. 产物 frontmatter 记录 `recipe` / `params` / `kp_ids` 快照，文尾 wiki-link 回链每篇素材

@@ -6,27 +6,14 @@
 
 export const EN = {
 	// ----- main.ts -----
-	'main.ribbon.tooltip': 'Mimic: compose notes',
-	'main.command.compose': 'Mimic: knowledge notes → mimic note',
+	'main.ribbon.tooltip': 'Compose current note',
 	'main.command.composeCurrent': 'Mimic: compose current note',
 	'main.command.importSeeds': 'Import seed recipes (append, no overwrite)',
-	'main.notice.noKnowledge': 'No knowledge notes under the configured folder — run the migrate tool first, or check the folder setting',
-	'main.notice.noRecipes': 'No recipes yet — create one in settings, or run "Import seed recipes"',
+	'main.menu.composeOne': 'Mimic: compose this note',
+	'main.menu.composeMany': 'Mimic: compose {count} selected notes',
 	'main.notice.noActiveNote': 'No note is open — open one in the editor first, then run this command',
 	'main.notice.seedsExist': 'Seed recipes already present; nothing imported',
 	'main.notice.seedsImported': 'Imported {count} seed recipe(s) — free to remix in settings',
-
-	// ----- picker.ts -----
-	'picker.title': 'Mimic · pick material',
-	'picker.current.name': 'Current note',
-	'picker.current.desc': 'Skip the folder list and use the note you are editing (not limited to the knowledge folder)',
-	'picker.current.button': 'Use "{title}"',
-	'picker.folder.name': 'Pick from knowledge folder',
-	'picker.search.placeholder': 'Search: title / chapter / id',
-	'picker.next.empty': 'Next: set params',
-	'picker.next.count': 'Next: set params ({count} selected)',
-	'picker.row.meta': 'Ch.{chapter} {chapterTitle}',
-	'picker.empty': '(No matching notes; check the knowledge folder setting and migration)',
 
 	// ----- wizard.ts -----
 	'wizard.title': 'Mimic · compose',
@@ -69,7 +56,6 @@ export const EN = {
 	'settings.api.baseUrl': 'Base URL',
 	'settings.api.baseUrlDesc': 'Any OpenAI-compatible endpoint works (DeepSeek / Kimi / Ollama / LM Studio …); the default is a MiniMax example',
 	'settings.api.model': 'Model',
-	'settings.api.knowledgeDir': 'Knowledge folder (vault-relative)',
 	'settings.api.outputDir': 'Output folder (vault-relative)',
 	'settings.api.minWords': 'Word-count floor',
 	'settings.api.maxWords': 'Word-count ceiling',
@@ -125,27 +111,14 @@ export type TranslationKey = keyof typeof EN;
 
 export const ZH: Record<TranslationKey, string> = {
 	// ----- main.ts -----
-	'main.ribbon.tooltip': 'Mimic 拟态加工',
-	'main.command.compose': '拟态加工：知识点 → 拟态笔记',
+	'main.ribbon.tooltip': '加工当前笔记',
 	'main.command.composeCurrent': '拟态加工：加工当前笔记',
 	'main.command.importSeeds': '导入示范配方（追加，不覆盖已有）',
-	'main.notice.noKnowledge': '「{dir}/」下没有知识点笔记——请先运行 migrate 工具或检查设置里的目录',
-	'main.notice.noRecipes': '还没有配方——请在设置中新建，或运行「导入示范配方」',
+	'main.menu.composeOne': '拟态加工：加工此笔记',
+	'main.menu.composeMany': '拟态加工：对选中的 {count} 个文件加工',
 	'main.notice.noActiveNote': '当前没有打开的笔记——先在编辑区打开一篇再运行此命令',
 	'main.notice.seedsExist': '示范配方已存在，未重复导入',
 	'main.notice.seedsImported': '已导入 {count} 个示范配方（设置中可自由改造）',
-
-	// ----- picker.ts -----
-	'picker.title': 'Mimic · 选择加工素材',
-	'picker.current.name': '当前笔记',
-	'picker.current.desc': '不想从目录里挑？直接拿正在编辑的这篇当素材（不受知识点目录限制）',
-	'picker.current.button': '用「{title}」作素材',
-	'picker.folder.name': '从知识点目录勾选',
-	'picker.search.placeholder': '搜索：标题 / 章节 / 编号',
-	'picker.next.empty': '下一步：设置参数',
-	'picker.next.count': '下一步：设置参数（已选 {count}）',
-	'picker.row.meta': '第{chapter}章 {chapterTitle}',
-	'picker.empty': '（无匹配知识点；确认知识点目录设置正确且已迁移）',
 
 	// ----- wizard.ts -----
 	'wizard.title': 'Mimic · 拟态加工',
@@ -188,7 +161,6 @@ export const ZH: Record<TranslationKey, string> = {
 	'settings.api.baseUrl': 'Base URL',
 	'settings.api.baseUrlDesc': '任何 OpenAI 兼容端点均可（DeepSeek / Kimi / Ollama / LM Studio…）；默认值是 MiniMax 的示例',
 	'settings.api.model': '模型',
-	'settings.api.knowledgeDir': '知识点目录（vault 相对）',
 	'settings.api.outputDir': '输出目录（vault 相对）',
 	'settings.api.minWords': '字数下限',
 	'settings.api.maxWords': '字数上限',

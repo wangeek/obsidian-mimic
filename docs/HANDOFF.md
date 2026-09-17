@@ -53,9 +53,11 @@ i18n：`src/i18n.ts` 仿 lottery 模式——EN 为基准字典 + `TranslationKe
   prompt 注入机制（插件只拼装指令，不懂内容）。
 - **产物语言跟随素材**：GENERATE_SYSTEM 硬规则要求输出语言 = 知识素材语言
   （标题/正文/link_notes 一致），防止因中文 prompt 导致英文素材产出中文。
-- 素材两种入口：知识点目录勾选（`indexKnowledge`）+ **当前笔记**
-  （`buildKpFromFile`，无 kp_id 的笔记标 `external`，不进产物 `kp_ids`，
-  回链用文件名 wiki-link）。默认字数守门 300~800。
+- 素材入口（2026-09-17 重构，目录勾选式选择器已移除）：①ribbon/命令 =
+  加工当前笔记；②文件浏览器右键 = 加工此笔记 / 对选中的 N 个文件加工
+  （多选集合读 file-explorer 的 `selectedDoms`——**非公开 API**，try-catch
+  降级为右键锚点文件）。无 kp_id 的笔记标 `external`，不进产物 `kp_ids`，
+  回链用文件名 wiki-link。默认字数守门 300~800（prompt 同步注入预算）。
 
 ## 5. 环境事实（Windows / 本机）
 
