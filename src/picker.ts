@@ -18,6 +18,7 @@ export class KpPickerModal extends Modal {
 		this.all = notes;
 		this.current = current;
 		this.setTitle(t('picker.title'));
+		this.modalEl.addClass('fn-wizard');
 	}
 
 	/** 返回 Promise，resolve 选中的知识点（取消/关闭返回 []） */

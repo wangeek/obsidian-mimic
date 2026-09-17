@@ -1,11 +1,31 @@
 /* Mimic 向导与选择器样式 */
 
 .fn-wizard .modal-content {
-	width: 760px;
-	max-width: 92vw;
+	width: 700px;
+	max-width: 100%;
+	box-sizing: border-box;
 }
 
-/* 配方编辑表单的紧凑两列（相邻短字段同行） */
+/* 窄弹窗表单排版：名称在上、控件占满整行，杜绝横向溢出 */
+.fn-wizard .setting-item {
+	display: block;
+}
+.fn-wizard .setting-item-control {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 6px;
+}
+.fn-wizard .setting-item-control select,
+.fn-wizard .setting-item-control input[type='text'],
+.fn-wizard .setting-item-control input[type='number'],
+.fn-wizard .setting-item-control textarea {
+	width: 100%;
+	flex: 1;
+	min-width: 0;
+}
+
+/* 配方编辑的紧凑两列（相邻短字段同行） */
 .fn-two-col {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
