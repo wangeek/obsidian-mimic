@@ -54,6 +54,7 @@ export const EN = {
 	// ----- llm.ts -----
 	'llm.noJson': 'No JSON object in the response',
 	'llm.jsonUnclosed': 'JSON object not closed',
+	'llm.jsonInvalid': 'Invalid JSON ({msg}) near {ctx}',
 	'llm.noContent': 'Unexpected response shape (no content)',
 	'llm.failed': 'LLM call failed (retries exhausted): {msg}',
 
@@ -171,6 +172,7 @@ export const ZH: Record<TranslationKey, string> = {
 	// ----- llm.ts -----
 	'llm.noJson': '回复中没有 JSON 对象',
 	'llm.jsonUnclosed': 'JSON 对象未闭合',
+	'llm.jsonInvalid': 'JSON 不合法（{msg}）出错位置附近：{ctx}',
 	'llm.noContent': '回复结构异常（无 content）',
 	'llm.failed': 'LLM 调用失败（已重试）：{msg}',
 

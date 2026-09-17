@@ -14,27 +14,46 @@ export function stripThink(s: string): string {
 	return s.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 }
 
-/** 从剥完 think 的文本中宽松提取第一个 JSON 对象（容忍代码栅栏与前后杂文） */
+/** 从剥完 think 的文本中宽松提取第一个 JSON 对象（容忍代码栅栏与前后杂文）。
+ * 提取时重建文本并转义字符串内的裸控制字符（模型常见毛病）；
+ * JSON.parse 仍失败则抛带出错位置上下文的错误。 */
 export function parseJsonLoose(s: string): Record<string, unknown> {
-	const t2 = stripThink(s);
-	const start = t2.indexOf('{');
+	const text = stripThink(s);
+	const start = text.indexOf('{');
 	if (start < 0) throw new Error(t('llm.noJson'));
 	let depth = 0, inStr = false, esc = false;
-	for (let i = start; i < t2.length; i++) {
-		const c = t2[i];
+	let rebuilt = '';
+	for (let i = start; i < text.length; i++) {
+		const c = text[i];
+		rebuilt += c;
 		if (esc) { esc = false; continue; }
 		if (c === '\\') { esc = true; continue; }
 		if (c === '"') { inStr = !inStr; continue; }
-		if (inStr) continue;
+		if (inStr) {
+			if (c === '\n') rebuilt = rebuilt.slice(0, -1) + '\\n';
+			else if (c === '\r') rebuilt = rebuilt.slice(0, -1) + '\\r';
+			else if (c === '\t') rebuilt = rebuilt.slice(0, -1) + '\\t';
+			continue;
+		}
 		if (c === '{') depth++;
 		else if (c === '}') {
 			depth--;
-			if (depth === 0) {
-				return JSON.parse(t2.slice(start, i + 1));
-			}
+			if (depth === 0) return strictParse(rebuilt);
 		}
 	}
 	throw new Error(t('llm.jsonUnclosed'));
+}
+
+function strictParse(json: string): Record<string, unknown> {
+	try {
+		return JSON.parse(json) as Record<string, unknown>;
+	} catch (e) {
+		const msg = e instanceof Error ? e.message : String(e);
+		const m = /position (\d+)/.exec(msg);
+		const p = m ? parseInt(m[1], 10) : -1;
+		const ctx = p >= 0 ? `…${json.slice(Math.max(0, p - 50), p + 50)}…` : '';
+		throw new Error(t('llm.jsonInvalid', { msg, ctx }));
+	}
 }
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));

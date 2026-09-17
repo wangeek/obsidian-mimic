@@ -2,7 +2,7 @@
 import { App, Modal, Notice, Setting } from 'obsidian';
 import type MimicPlugin from './main';
 import type { ComposeResult, KpNote } from './types';
-import { buildGeneratePrompt, renderSlot } from './prompt';
+import { buildGeneratePrompt, buildJsonRepair, renderSlot } from './prompt';
 import { chat, parseJsonLoose } from './llm';
 import { writeComposedNote } from './render';
 import { t } from './i18n';
@@ -156,8 +156,16 @@ export class ComposeWizard extends Modal {
 
 		this.renderGenerating();
 		try {
-			const raw = await chat(st, system, user, 0.7);
-			const v = parseJsonLoose(raw);
+			let raw = await chat(st, system, user, 0.7);
+			let v: Record<string, unknown>;
+			try {
+				v = parseJsonLoose(raw);
+			} catch (pe) {
+				// 自愈重试：把解析错误反馈给模型，降温重生成一次
+				const msg = pe instanceof Error ? pe.message : String(pe);
+				raw = await chat(st, system, user + '\n' + buildJsonRepair(msg), 0.3);
+				v = parseJsonLoose(raw);
+			}
 			const linkNotes: Record<string, string> = {};
 			const ln = v.link_notes;
 			if (ln && typeof ln === 'object' && !Array.isArray(ln)) {

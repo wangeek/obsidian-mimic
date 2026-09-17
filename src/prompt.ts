@@ -13,7 +13,7 @@ const GENERATE_SYSTEM = `你是拟态内容引擎：以"模仿"（忠实镜像�
 2. 扭曲边界——不得编造知识点中不存在的事实与数据；遵循【禁则】；如【世界观】非空，冲突一律通过该虚构舞台表达，不映射现实国家/地区。
 3. 文章结构分为两段输出（JSON）：core_segment（核心段，知识密度最高的部分，定稿后不再编辑）与 narrative_shell（叙事外壳，其余全文，可编辑）；全文总长度必须遵守【字数要求】。
 4. 另在 link_notes 中为【关联知识点】的每个知识点写一句话说明（本文如何使用/呼应它），键为知识点标题。
-5. 输出严格 JSON：{"title": "...", "core_segment": "...", "narrative_shell": "...", "link_notes": {"<知识点标题>": "<一句话说明>"} }，无其他文字。
+5. 输出严格 JSON：{"title": "...", "core_segment": "...", "narrative_shell": "...", "link_notes": {"<知识点标题>": "<一句话说明>"} }，除 JSON 外不得输出任何文字（含代码栅栏）。JSON 必须可被解析：字符串值内的英文双引号写成 \\" 或改用中文引号“”；字符串值内禁止裸换行。
 6. 语言跟随——输出（标题/正文/link_notes 的值）一律使用【知识素材】的语言：素材为中文则全文中文，素材为英文则全文英文；禁止切换或混杂语言（专有名词除外）。`;
 
 export interface PromptPoint {
@@ -56,4 +56,9 @@ ${points}
 【字数要求】全文（core_segment + narrative_shell 合计）总长度控制在 ${a.minWords}~${a.maxWords}（中文按字计、英文按词计，专有名词除外）——硬性边界，超限即不合格；目标约 ${target}。
 【禁则】${a.forbidden}`;
 	return { system: GENERATE_SYSTEM, user };
+}
+
+/** JSON 解析失败后的自愈重试指令（prompt 层内容，中文固定，不随 UI 语言切换） */
+export function buildJsonRepair(parseError: string): string {
+	return `【重试】你上一次的输出不是合法 JSON（解析错误：${parseError}）。请重新输出完整结果：仅一个 JSON 对象，不要代码栅栏与任何多余文字；字符串值内的英文双引号必须转义为 \\" 或改用中文引号“”；字符串值内不得有裸换行。`;
 }
