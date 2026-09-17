@@ -1,7 +1,7 @@
 {
 	"id": "mimic",
 	"name": "Mimic",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"minAppVersion": "1.4.0",
 	"description": "拟态加工：模仿-扭曲。把知识点笔记按可配置的提示词配方加工成传播视角的叙述笔记（正文 + 关联知识点 wiki-link）。Compose knowledge notes via mimic-distort recipes.",
 	"author": "tp906",

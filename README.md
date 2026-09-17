@@ -30,7 +30,7 @@ Obsidian → Settings → Community plugins → Browse → search **Mimic** → 
 
 Two ways to feed the composer:
 
-**A. Run the one-shot migration** if you have a structured knowledge base as SQLite (`migrate/migrate.py --src <dir-with-knowledge.db> --vault <vault>`). It expects a `knowledge_points` table:
+**A. Run the one-shot migration** if your knowledge base is a SQLite file (`migrate/migrate.py --src <dir-with-knowledge.db> --vault <vault>`). It expects a `knowledge_points` table:
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -70,7 +70,7 @@ Two ways to feed the composer:
 
 孙悟空七十二变，变什么都有条藏不住的尾巴。拟态也是这个理：**讲法**可以随便变——新闻播报、取经路上师徒斗嘴、竞选辩论——但知识的"尾巴"（核心定义）必须原样留在文中。变的是说法，不变的是知识。
 
-Mimic 把这件事做成了 Obsidian 插件：右键一篇笔记（或在文件列表里多选几篇），选一个**配方**（一个舞台、几条禁则、一把提示词槽位），LLM 写出一篇文章——核心段忠实镜像定义且锁定，叙事外壳随你口味变形、可编辑，产物落回仓库并回链素材。
+Mimic 把这件事做成了 Obsidian 插件：右键一篇笔记（或在文件列表里多选几篇），选一个**配方**（一个舞台、几条禁则、几个提示词槽位），LLM 写出一篇文章——核心段忠实镜像定义且锁定，叙事外壳随你口味变形、可编辑，产物落回仓库并回链素材。
 
 ## 特性
 

@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-mimic",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "拟态加工（模仿-扭曲）知识笔记的 Obsidian 插件",
 	"main": "main.js",
 	"author": "tp906 <tp906@163.com>",
